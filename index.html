@@ -122,6 +122,7 @@ main{
 .abtn:active{transform:translate(3px,3px);box-shadow:none;}
 .abtn-nav{background:var(--bl);color:var(--bk);}
 .abtn-art{background:var(--pk);color:#fff;}
+.abtn-tel{background:var(--gn);color:var(--bk);}
 .abtn-plan{background:var(--yw);color:var(--bk);}
 
 /* ══ PLANNER PANEL ══
@@ -234,16 +235,37 @@ main{
 .empty-plan .big{font-size:2.8em;}
 
 /* ══ LEAFLET POPUP ══ */
-.leaflet-popup-content-wrapper{border:var(--bdt)!important;border-radius:14px!important;box-shadow:var(--shl)!important;padding:0!important;overflow:hidden;font-family:var(--fb)!important;}
+.leaflet-popup-content-wrapper{border:4px solid #1a1a1a!important;border-radius:16px!important;box-shadow:6px 6px 0 #1a1a1a!important;padding:0!important;overflow:hidden;font-family:'Nunito','Noto Sans TC',sans-serif!important;}
 .leaflet-popup-tip-container{display:none;}
-.leaflet-popup-content{margin:0!important;min-width:160px!important;}
-.pp{font-family:var(--fb);}
-.pp-head{padding:9px 13px;font-family:var(--fh);font-size:.95rem;display:flex;align-items:center;gap:7px;border-bottom:2.5px solid var(--bk);}
-.pp-sub{font-size:.68rem;font-weight:800;padding:4px 13px;color:#666;}
-.pp-acts{padding:5px 13px 9px;display:flex;gap:6px;}
-.pp-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:2.5px solid var(--bk);border-radius:7px;font-family:var(--fb);font-size:.68rem;font-weight:800;cursor:pointer;box-shadow:2px 2px 0 var(--bk);transition:all .12s;background:var(--yw);}
-.pp-btn:active{transform:translate(2px,2px);box-shadow:none;}
-.pp-btn-add{background:var(--pu);color:#fff;}
+.leaflet-popup-content{margin:0!important;min-width:200px!important;}
+.leaflet-popup-close-button{
+  position:absolute!important;right:8px!important;top:8px!important;
+  width:22px!important;height:22px!important;
+  background:#1a1a1a!important;color:#FFE94E!important;
+  border-radius:50%!important;font-size:14px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  z-index:10!important;font-weight:900!important;
+}
+.pp{font-family:'Nunito','Noto Sans TC',sans-serif;}
+.pp-head{
+  padding:11px 14px 9px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:3px solid #1a1a1a;
+}
+.pp-head > div { flex:1; min-width:0; padding-right:18px; }
+.pp-acts{padding:8px 12px 10px;display:flex;gap:7px;flex-wrap:wrap;}
+.pp-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:6px 12px;border:2.5px solid #1a1a1a;border-radius:9px;
+  font-family:'Nunito','Noto Sans TC',sans-serif;
+  font-size:.72rem;font-weight:800;
+  cursor:pointer;box-shadow:3px 3px 0 #1a1a1a;
+  transition:all .12s;background:#FFE94E;color:#1a1a1a;
+  text-decoration:none;
+}
+.pp-btn:active{transform:translate(3px,3px);box-shadow:none;}
+.pp-btn-nav{background:#4FC3F7;}
+.pp-btn-tel{background:#69D84F;}
 
 /* ══ MODALS ══ */
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
@@ -463,8 +485,9 @@ function renderCards(c) {
       <div class="pcard-body" id="body-${pl.id}">
         <p class="pdesc">${pl.desc}</p>
         <div class="pbtns">
-          <a class="abtn abtn-nav" href="${pl.nav}" target="_blank">🧭 導航</a>
-          ${pl.article ? `<a class="abtn abtn-art" href="${pl.article}" target="_blank">📝 文章</a>` : ''}
+          <a class="abtn abtn-nav" href="https://www.google.com/maps/dir/?api=1&destination=\${pl.lat},\${pl.lng}&travelmode=walking" target="_blank">🧭 導航</a>
+          \${pl.phone ? `<a class="abtn abtn-tel" href="tel:\${pl.phone}">📞 \${pl.phone}</a>` : ''}
+          \${pl.article ? `<a class="abtn abtn-art" href="\${pl.article}" target="_blank">📝 文章</a>` : ''}
         </div>
       </div>`;
     list.appendChild(card);
