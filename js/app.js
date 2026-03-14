@@ -185,3 +185,82 @@ function triggerSpeedLines() {
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 600);
 }
+
+// ════════════════════════════════════════════
+// DRAG-TO-RESIZE sidebar (desktop)
+// ════════════════════════════════════════════
+(function initResize() {
+  const handle  = document.getElementById('resizeHandle');
+  const sidebar = document.getElementById('sidebar');
+  if (!handle || !sidebar) return;
+
+  let dragging = false, startX = 0, startW = 0;
+  const isMobile = () => window.innerWidth <= 600;
+
+  handle.addEventListener('mousedown', e => {
+    if (isMobile()) return;
+    dragging = true;
+    startX   = e.clientX;
+    startW   = sidebar.offsetWidth;
+    handle.classList.add('dragging');
+    document.body.style.cursor    = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging || isMobile()) return;
+    const delta  = startX - e.clientX;           // drag left = wider
+    const newW   = Math.min(Math.max(startW + delta, 200), window.innerWidth * 0.55);
+    sidebar.style.width = newW + 'px';
+    map && map.invalidateSize();
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor     = '';
+    document.body.style.userSelect = '';
+    map && map.invalidateSize();
+  });
+
+  // Touch support
+  handle.addEventListener('touchstart', e => {
+    if (isMobile()) return;
+    dragging = true;
+    startX   = e.touches[0].clientX;
+    startW   = sidebar.offsetWidth;
+    handle.classList.add('dragging');
+    e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('touchmove', e => {
+    if (!dragging || isMobile()) return;
+    const delta = startX - e.touches[0].clientX;
+    const newW  = Math.min(Math.max(startW + delta, 200), window.innerWidth * 0.55);
+    sidebar.style.width = newW + 'px';
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    map && map.invalidateSize();
+  });
+})();
+
+// ════════════════════════════════════════════
+// MOBILE PLANNER — backdrop toggle
+// ════════════════════════════════════════════
+const _origTogglePlanner = togglePlanner;
+// Override togglePlanner to also manage backdrop on mobile
+function togglePlanner() {
+  _origTogglePlanner();
+  const backdrop = document.getElementById('plannerBackdrop');
+  if (backdrop && window.innerWidth <= 600) {
+    backdrop.classList.toggle('show', plannerOpen);
+  }
+  // Invalidate map size after panel animation
+  setTimeout(() => map && map.invalidateSize(), 350);
+}
