@@ -86,18 +86,37 @@ header{
 .tab-btn.active .tab-count{background:var(--pink);color:var(--white);}
 
 /* ── MAIN ── */
-main{display:flex;flex:1;min-height:0;position:relative;}
+main{display:flex;flex:1;min-height:0;position:relative;overflow:hidden;}
 
 /* ── MAP ── */
 #mapWrap{flex:1;min-width:0;position:relative;}
 #map{width:100%;height:100%;}
 #map::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:500;box-shadow:inset 0 0 0 3px var(--black);}
 
+/* ── RESIZE HANDLE between map and sidebar ── */
+#resizeHandle{
+  width:8px;flex-shrink:0;
+  background:var(--black);
+  cursor:col-resize;
+  position:relative;
+  z-index:50;
+  transition:background .15s;
+}
+#resizeHandle:hover,#resizeHandle.dragging{background:var(--yellow);}
+#resizeHandle::after{
+  content:'⠿';
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(90deg);
+  font-size:14px;color:var(--yellow);
+  pointer-events:none;
+}
+#resizeHandle.dragging::after{color:var(--black);}
+
 /* ── SIDEBAR ── */
 .sidebar{
-  width:300px;flex-shrink:0;display:flex;flex-direction:column;
-  background:var(--white);border-left:var(--border-thick);overflow:hidden;
-  transition:width .3s ease;
+  width:300px;min-width:200px;max-width:60vw;
+  flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--white);overflow:hidden;
 }
 .sidebar-head{
   padding:14px 16px 12px;background:var(--green);
@@ -410,17 +429,80 @@ main{display:flex;flex:1;min-height:0;position:relative;}
 }
 .marker-emoji{transform:rotate(45deg);font-size:16px;line-height:1;}
 
-/* ══ RESPONSIVE ══ */
-@media(max-width:760px){
-  .sidebar{width:260px;}
-  --planner-w:300px;
+/* ══════════════════════════════════════════
+   RESPONSIVE / RWD
+   ══════════════════════════════════════════ */
+
+/* ── Tablet (≤ 860px) ── */
+@media(max-width:860px){
   .header-text p{display:none;}
-  .hdr-admin{display:none;}
+  .sidebar{width:260px;min-width:180px;}
+  #resizeHandle{width:6px;}
 }
-@media(max-width:540px){
+
+/* ── Mobile (≤ 600px) ── */
+@media(max-width:600px){
+  /* header compact */
+  header{padding:8px 12px;gap:8px;}
+  .header-logo{width:38px;height:38px;font-size:18px;}
+  .header-text h1{font-size:1.1rem;}
+  .header-text p{display:none;}
+  .hdr-btn{padding:6px 10px;font-size:.75rem;}
+
+  /* tabs */
+  .tabs-wrapper{padding:0 8px;}
+  .tab-btn{padding:7px 10px;font-size:.78rem;}
+
+  /* MAIN: vertical stack — map on top, sidebar below */
   main{flex-direction:column;}
-  #mapWrap{height:50vw;flex:none;}
-  .sidebar{width:100%;border-left:none;border-top:var(--border-thick);}
-  .planner-panel{top:auto;bottom:0;height:75vh;width:100%;border-left:none;border-top:var(--border-thick);transform:translateY(calc(100% + 4px));}
+  #mapWrap{height:44vh;min-height:200px;flex:none;}
+  #resizeHandle{
+    width:100%;height:8px;
+    cursor:row-resize;
+    border-left:none;border-top:3px solid var(--black);
+    background:var(--black);
+  }
+  #resizeHandle::after{
+    transform:translate(-50%,-50%) rotate(0deg);
+  }
+  .sidebar{
+    width:100%;min-width:unset;max-width:unset;
+    height:auto;flex:1;
+    border-left:none;border-top:var(--border-thick);
+  }
+
+  /* PLANNER — full-screen bottom sheet */
+  .planner-panel{
+    position:fixed;
+    left:0;right:0;bottom:0;top:auto;
+    width:100% !important;
+    height:82vh;
+    border-left:none;
+    border-top:var(--border-thick);
+    border-radius:20px 20px 0 0;
+    box-shadow:0 -6px 0 var(--black);
+    transform:translateY(calc(100% + 4px));
+  }
   .planner-panel.open{transform:translateY(0);}
+
+  /* bottom sheet drag handle bar */
+  .planner-panel::before{
+    content:'';
+    display:block;
+    width:40px;height:5px;
+    background:rgba(0,0,0,.2);
+    border-radius:3px;
+    margin:10px auto 0;
+  }
+  .planner-head{border-radius:0;}
+
+  /* overlay backdrop when planner open on mobile */
+  .planner-backdrop{
+    display:none;
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.4);
+    z-index:299;
+    backdrop-filter:blur(2px);
+  }
+  .planner-backdrop.show{display:block;}
 }
