@@ -211,9 +211,13 @@ textarea{resize:vertical;min-height:80px;}
     <span class="login-icon">🔐</span>
     <h1>後台管理</h1>
     <p>請輸入管理員密碼</p>
-    <input type="password" id="pwInput" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')doLogin()">
+    <input type="password" id="pwInput" placeholder="輸入密碼（預設：travel2024）" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="btn-login" onclick="doLogin()">登入 →</button>
-    <div class="login-err" id="loginErr">密碼錯誤，請重試</div>
+    <div class="login-err" id="loginErr" style="display:none">密碼錯誤，請重試</div>
+    <p style="font-size:.68rem;color:#aaa;margin-top:14px;font-weight:700;">
+      💡 預設密碼為 <code style="background:var(--yellow);padding:1px 6px;border-radius:4px;border:1px solid #ccc;">travel2024</code><br>
+      可在 data.json 的 <code style="background:var(--yellow);padding:1px 6px;border-radius:4px;border:1px solid #ccc;">adminPassword</code> 欄位修改
+    </p>
   </div>
 </div>
 
@@ -376,23 +380,56 @@ let adminData = null;
 let editContext = null; // { type: 'place'|'country', countryId, placeId }
 
 // ── Login ──
+// 預設密碼寫在這裡，同時也從 data.json 讀取
+// 若 data.json 讀取失敗，仍可用此處的密碼登入
+const DEFAULT_PASSWORD = 'travel2024';
+
 async function doLogin() {
-  // Load data first
+  const pw = document.getElementById('pwInput').value.trim();
+  if (!pw) return;
+
+  // 顯示載入中
+  const btn = document.querySelector('.btn-login');
+  btn.textContent = '載入中...'; btn.disabled = true;
+
+  // 嘗試從 data.json 讀取（可能因路徑或 CORS 失敗）
+  let storedPassword = DEFAULT_PASSWORD;
   try {
-    const res = await fetch('data.json?v=' + Date.now());
-    adminData = await res.json();
+    const res = await fetch('./data.json?nocache=' + Date.now());
+    if (res.ok) {
+      const json = await res.json();
+      adminData = json;
+      storedPassword = (json.site && json.site.adminPassword) ? json.site.adminPassword : DEFAULT_PASSWORD;
+    } else {
+      // fetch 成功但 HTTP 錯誤（404 等）→ 用預設密碼 + 空資料
+      adminData = getDefaultData();
+    }
   } catch(e) {
-    adminData = { site: { title:'旅行漫遊地圖', subtitle:'My Comic Travel Map', adminPassword:'travel2024' }, countries: [] };
+    // 網路錯誤或 JSON 解析失敗 → 用預設密碼 + 空資料
+    adminData = getDefaultData();
+    console.warn('data.json 載入失敗，使用預設資料', e);
   }
-  const pw = document.getElementById('pwInput').value;
-  if (pw === adminData.site.adminPassword) {
+
+  btn.textContent = '登入 →'; btn.disabled = false;
+
+  if (pw === storedPassword) {
+    document.getElementById('loginErr').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('adminApp').style.display = 'block';
     renderAdmin();
   } else {
     document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('loginErr').textContent = '密碼錯誤，請重試（預設密碼：travel2024）';
     document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
   }
+}
+
+function getDefaultData() {
+  return {
+    site: { title:'旅行漫遊地圖', subtitle:'My Comic Travel Map', description:'記錄旅行足跡', adminPassword: DEFAULT_PASSWORD },
+    countries: []
+  };
 }
 
 // ── Render ──
