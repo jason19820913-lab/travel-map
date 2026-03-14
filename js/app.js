@@ -187,80 +187,83 @@ function triggerSpeedLines() {
 }
 
 // ════════════════════════════════════════════
-// DRAG-TO-RESIZE sidebar (desktop)
+// DRAG-TO-RESIZE — sidebar width & planner width
 // ════════════════════════════════════════════
-(function initResize() {
+document.addEventListener('DOMContentLoaded', () => {
+  setupSidebarResize();
+  setupPlannerResize();
+});
+
+function setupSidebarResize() {
   const handle  = document.getElementById('resizeHandle');
   const sidebar = document.getElementById('sidebar');
   if (!handle || !sidebar) return;
-
   let dragging = false, startX = 0, startW = 0;
-  const isMobile = () => window.innerWidth <= 600;
 
   handle.addEventListener('mousedown', e => {
     if (isMobile()) return;
-    dragging = true;
-    startX   = e.clientX;
-    startW   = sidebar.offsetWidth;
+    dragging = true; startX = e.clientX; startW = sidebar.offsetWidth;
     handle.classList.add('dragging');
-    document.body.style.cursor    = 'col-resize';
-    document.body.style.userSelect = 'none';
+    setDragState(true);
     e.preventDefault();
   });
-
   document.addEventListener('mousemove', e => {
     if (!dragging || isMobile()) return;
-    const delta  = startX - e.clientX;           // drag left = wider
-    const newW   = Math.min(Math.max(startW + delta, 200), window.innerWidth * 0.55);
-    sidebar.style.width = newW + 'px';
+    const delta = startX - e.clientX;
+    sidebar.style.width = clamp(startW + delta, 180, window.innerWidth * 0.5) + 'px';
     map && map.invalidateSize();
   });
-
   document.addEventListener('mouseup', () => {
     if (!dragging) return;
     dragging = false;
     handle.classList.remove('dragging');
-    document.body.style.cursor     = '';
-    document.body.style.userSelect = '';
+    setDragState(false);
     map && map.invalidateSize();
   });
+}
 
-  // Touch support
-  handle.addEventListener('touchstart', e => {
-    if (isMobile()) return;
-    dragging = true;
-    startX   = e.touches[0].clientX;
-    startW   = sidebar.offsetWidth;
+function setupPlannerResize() {
+  const handle  = document.getElementById('plannerResizeHandle');
+  const panel   = document.getElementById('plannerPanel');
+  if (!handle || !panel) return;
+  let dragging = false, startX = 0, startW = 0;
+
+  handle.addEventListener('mousedown', e => {
+    if (isMobile() || !plannerOpen) return;
+    dragging = true; startX = e.clientX; startW = panel.offsetWidth;
     handle.classList.add('dragging');
+    setDragState(true);
     e.preventDefault();
-  }, { passive: false });
-
-  document.addEventListener('touchmove', e => {
+  });
+  document.addEventListener('mousemove', e => {
     if (!dragging || isMobile()) return;
-    const delta = startX - e.touches[0].clientX;
-    const newW  = Math.min(Math.max(startW + delta, 200), window.innerWidth * 0.55);
-    sidebar.style.width = newW + 'px';
-  }, { passive: true });
-
-  document.addEventListener('touchend', () => {
+    const delta = startX - e.clientX;
+    panel.style.width = clamp(startW + delta, 240, window.innerWidth * 0.6) + 'px';
+    map && map.invalidateSize();
+  });
+  document.addEventListener('mouseup', () => {
     if (!dragging) return;
     dragging = false;
     handle.classList.remove('dragging');
+    setDragState(false);
     map && map.invalidateSize();
   });
-})();
+}
 
-// ════════════════════════════════════════════
-// MOBILE PLANNER — backdrop toggle
-// ════════════════════════════════════════════
+// Show/hide planner resize handle when planner opens/closes
 const _origTogglePlanner = togglePlanner;
-// Override togglePlanner to also manage backdrop on mobile
 function togglePlanner() {
   _origTogglePlanner();
+  const handle   = document.getElementById('plannerResizeHandle');
   const backdrop = document.getElementById('plannerBackdrop');
-  if (backdrop && window.innerWidth <= 600) {
-    backdrop.classList.toggle('show', plannerOpen);
-  }
-  // Invalidate map size after panel animation
+  if (handle) handle.classList.toggle('visible', plannerOpen);
+  if (backdrop && isMobile()) backdrop.classList.toggle('show', plannerOpen);
   setTimeout(() => map && map.invalidateSize(), 350);
+}
+
+function isMobile() { return window.innerWidth <= 600; }
+function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
+function setDragState(on) {
+  document.body.style.cursor     = on ? 'col-resize' : '';
+  document.body.style.userSelect = on ? 'none' : '';
 }
