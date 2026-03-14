@@ -2,114 +2,906 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>旅行漫遊地圖</title>
-<meta name="description" content="記錄旅行足跡，打造你的專屬行程">
-<meta property="og:title" content="旅行漫遊地圖">
-<meta property="og:description" content="探索景點、規劃行程，開始你的旅行冒險">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Noto+Sans+TC:wght@700;900&family=Fredoka+One&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link rel="stylesheet" href="css/style.css">
+<style>
+/* ══ TOKENS ══ */
+:root{
+  --bk:#1a1a1a; --wh:#fffef5; --yw:#FFE94E; --pk:#FF6B9D;
+  --bl:#4FC3F7; --gn:#69D84F; --or:#FF9A3C; --pu:#B57BFF; --rd:#FF4B4B;
+  --bd:3px solid var(--bk); --bdt:4px solid var(--bk);
+  --sh:4px 4px 0 var(--bk); --shl:6px 6px 0 var(--bk);
+  --fh:'Fredoka One','Noto Sans TC',sans-serif;
+  --fb:'Nunito','Noto Sans TC',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;font-family:var(--fb);background:var(--yw);color:var(--bk);}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,.07) 1.5px,transparent 1.5px);background-size:18px 18px;pointer-events:none;z-index:0;}
+
+/* ══ APP SHELL ══ */
+#app{display:flex;flex-direction:column;height:100vh;position:relative;z-index:1;}
+
+/* ══ HEADER ══ */
+header{
+  background:var(--pk);border-bottom:var(--bdt);
+  padding:8px 16px;display:flex;align-items:center;gap:12px;
+  flex-shrink:0;box-shadow:0 4px 0 var(--bk);z-index:200;
+}
+.h-logo{width:44px;height:44px;background:var(--yw);border:var(--bdt);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:var(--sh);flex-shrink:0;animation:wiggle 3s ease-in-out infinite;}
+@keyframes wiggle{0%,100%{transform:rotate(-5deg);}50%{transform:rotate(5deg);}}
+.h-title{font-family:var(--fh);font-size:clamp(1rem,3vw,1.8rem);color:var(--wh);text-shadow:3px 3px 0 var(--bk);-webkit-text-stroke:1px var(--bk);}
+.h-sub{font-size:.65rem;font-weight:800;color:rgba(255,254,245,.75);letter-spacing:.1em;text-transform:uppercase;}
+.h-actions{margin-left:auto;display:flex;gap:7px;align-items:center;}
+.hbtn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:var(--bdt);border-radius:10px;font-family:var(--fb);font-size:.78rem;font-weight:800;background:var(--yw);color:var(--bk);cursor:pointer;box-shadow:var(--sh);transition:all .12s;white-space:nowrap;}
+.hbtn:hover{transform:translate(-2px,-2px);box-shadow:var(--shl);}
+.hbtn:active{transform:translate(4px,4px);box-shadow:none;}
+.badge{background:var(--rd);color:#fff;border-radius:20px;padding:1px 6px;font-size:.68rem;font-weight:900;border:2px solid var(--bk);}
+
+/* ══ TABS ══ */
+.tabs-bar{background:var(--bl);border-bottom:var(--bdt);padding:0 14px;display:flex;gap:5px;align-items:flex-end;box-shadow:0 4px 0 var(--bk);flex-shrink:0;overflow-x:auto;scrollbar-width:none;z-index:100;}
+.tabs-bar::-webkit-scrollbar{display:none;}
+.tab{background:rgba(255,255,255,.3);border:var(--bdt);border-bottom:none;border-radius:12px 12px 0 0;padding:8px 16px;font-family:var(--fh);font-size:.88rem;color:var(--bk);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap;position:relative;top:3px;}
+.tab:hover{background:rgba(255,255,255,.55);}
+.tab.active{background:var(--yw);box-shadow:-3px -3px 0 var(--bk),3px -3px 0 var(--bk);top:0;}
+.tab-n{background:var(--bk);color:var(--yw);border-radius:20px;padding:1px 6px;font-size:.7rem;font-weight:900;}
+.tab.active .tab-n{background:var(--pk);color:#fff;}
+
+/* ══ MAIN — TRUE FLEX ROW, NO ABSOLUTE ══ */
+main{
+  display:flex;
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+  /* children: map | drag1 | sidebar | drag2 | planner */
+}
+
+/* MAP */
+#mapWrap{flex:1;min-width:120px;position:relative;}
+#map{width:100%;height:100%;}
+#map::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:500;box-shadow:inset 0 0 0 3px var(--bk);}
+
+/* DRAG HANDLE (shared style) */
+.drag-handle{
+  width:8px;flex-shrink:0;background:var(--bk);cursor:col-resize;
+  position:relative;z-index:10;transition:background .15s;
+  display:flex;align-items:center;justify-content:center;
+}
+.drag-handle:hover,.drag-handle.active{background:var(--yw);}
+.drag-handle::after{content:'⠿';font-size:13px;color:rgba(255,255,255,.5);transform:rotate(90deg);pointer-events:none;}
+.drag-handle:hover::after,.drag-handle.active::after{color:var(--bk);}
+/* planner drag handle hidden when planner closed */
+#dh2{width:0;overflow:hidden;transition:width .3s;}
+#dh2.show{width:8px;}
+
+/* SIDEBAR */
+#sidebar{
+  width:290px;min-width:180px;flex-shrink:0;
+  display:flex;flex-direction:column;
+  background:var(--wh);border-left:var(--bdt);overflow:hidden;
+}
+.sb-head{padding:12px 14px 10px;background:var(--gn);border-bottom:var(--bdt);box-shadow:0 4px 0 var(--bk);}
+.sb-title{font-family:var(--fh);font-size:1.25rem;display:flex;align-items:center;gap:9px;}
+.sb-desc{font-size:.7rem;font-weight:700;color:rgba(0,0,0,.6);margin-top:3px;}
+.filter-row{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;}
+.fchip{padding:3px 10px;border:2.5px solid var(--bk);border-radius:20px;font-size:.68rem;font-weight:800;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.5);box-shadow:2px 2px 0 var(--bk);}
+.fchip:active{transform:translate(2px,2px);box-shadow:none;}
+.fchip.on-sight{background:var(--bl);}
+.fchip.on-restaurant{background:var(--or);}
+.fchip.on-nature{background:var(--gn);}
+.place-list{flex:1;overflow-y:auto;padding:8px 7px;display:flex;flex-direction:column;gap:6px;}
+.place-list::-webkit-scrollbar{width:4px;}
+.place-list::-webkit-scrollbar-thumb{background:var(--bk);border-radius:2px;}
+
+/* PLACE CARD */
+.pcard{border:var(--bdt);border-radius:14px;overflow:hidden;box-shadow:var(--sh);cursor:pointer;transition:transform .15s,box-shadow .15s;}
+.pcard:hover,.pcard.active{transform:translate(-2px,-2px);box-shadow:var(--shl);}
+.pcard-top{display:flex;align-items:center;gap:9px;padding:8px 10px;}
+.pcard-ico{width:38px;height:38px;border:2.5px solid var(--bk);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2em;flex-shrink:0;box-shadow:2px 2px 0 var(--bk);}
+.pcard-info{flex:1;min-width:0;}
+.pcard-name{font-family:var(--fh);font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pcard-tag{display:inline-block;margin-top:2px;padding:1px 7px;border:2px solid var(--bk);border-radius:20px;font-size:.6rem;font-weight:800;}
+.pcard-meta{font-size:.6rem;color:#777;font-weight:700;margin-top:2px;}
+.pcard-acts{display:flex;gap:5px;flex-shrink:0;}
+.btn-add{width:28px;height:28px;border:2.5px solid var(--bk);border-radius:8px;background:var(--yw);display:flex;align-items:center;justify-content:center;font-size:.85em;cursor:pointer;box-shadow:2px 2px 0 var(--bk);transition:all .12s;flex-shrink:0;}
+.btn-add:active{transform:translate(2px,2px);box-shadow:none;}
+.btn-add.on{background:var(--gn);}
+.chev{font-size:1em;transition:transform .2s;flex-shrink:0;}
+.chev.open{transform:rotate(180deg);}
+.sight     .pcard-top{background:#e0f4ff;} .sight     .pcard-ico{background:var(--bl);} .sight     .pcard-tag{background:var(--bl);}
+.restaurant .pcard-top{background:#fff3e0;} .restaurant .pcard-ico{background:var(--or);} .restaurant .pcard-tag{background:var(--or);}
+.nature    .pcard-top{background:#e8fce0;} .nature    .pcard-ico{background:var(--gn);} .nature    .pcard-tag{background:var(--gn);}
+.pcard-body{display:none;padding:9px 11px;background:var(--wh);border-top:2.5px solid var(--bk);animation:sld .2s ease;}
+.pcard-body.open{display:block;}
+@keyframes sld{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.pdesc{font-size:.76rem;line-height:1.75;color:#333;margin-bottom:9px;border-left:4px solid var(--yw);padding-left:8px;}
+.pbtns{display:flex;gap:6px;flex-wrap:wrap;}
+.abtn{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border:2.5px solid var(--bk);border-radius:8px;font-family:var(--fb);font-size:.7rem;font-weight:800;text-decoration:none;cursor:pointer;box-shadow:3px 3px 0 var(--bk);transition:all .12s;}
+.abtn:active{transform:translate(3px,3px);box-shadow:none;}
+.abtn-nav{background:var(--bl);color:var(--bk);}
+.abtn-art{background:var(--pk);color:#fff;}
+.abtn-plan{background:var(--yw);color:var(--bk);}
+
+/* ══ PLANNER PANEL ══
+   KEY: width:0 → width:360px, NO position:absolute
+   It is a FLEX SIBLING of mapWrap and sidebar
+*/
+#planner{
+  width:0;
+  min-width:0;
+  flex-shrink:0;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  background:var(--wh);
+  border-left:0px solid var(--bk);
+  transition:width .3s cubic-bezier(.22,1,.36,1),
+             border-left-width .3s,
+             min-width .3s;
+}
+#planner.open{
+  width:340px;
+  min-width:260px;
+  border-left-width:4px;
+}
+
+/* planner header */
+.pl-head{
+  background:var(--pu);border-bottom:var(--bdt);
+  padding:10px 12px;display:flex;align-items:center;
+  gap:7px;flex-shrink:0;
+  font-family:var(--fh);font-size:.95rem;
+  box-shadow:0 4px 0 var(--bk);
+  flex-wrap:wrap;
+}
+.pl-title{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pl-acts{display:flex;gap:5px;align-items:center;flex-shrink:0;}
+.plbtn{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:2.5px solid var(--bk);border-radius:8px;font-family:var(--fb);font-size:.7rem;font-weight:800;cursor:pointer;box-shadow:var(--sh);transition:all .12s;background:var(--wh);color:var(--bk);}
+.plbtn:active{transform:translate(4px,4px);box-shadow:none;}
+.plbtn-sort{background:var(--bl);}
+.plbtn-del{background:var(--rd);color:#fff;}
+.plbtn-close{background:var(--bk);color:var(--wh);padding:4px 8px;}
+.plbtn-share{background:var(--bl);flex:1;justify-content:center;}
+.plbtn-export{background:var(--gn);flex:1;justify-content:center;}
+
+/* itinerary tabs (multiple plans) */
+.plan-tabs{
+  display:flex;gap:4px;padding:8px 10px 0;
+  background:rgba(181,123,255,.15);
+  border-bottom:2.5px solid var(--bk);
+  overflow-x:auto;scrollbar-width:none;flex-shrink:0;
+}
+.plan-tabs::-webkit-scrollbar{display:none;}
+.ptab{
+  padding:5px 12px;border:2.5px solid var(--bk);border-radius:8px 8px 0 0;
+  font-family:var(--fh);font-size:.75rem;cursor:pointer;
+  background:rgba(255,255,255,.5);box-shadow:2px 0 0 var(--bk);
+  white-space:nowrap;transition:all .12s;flex-shrink:0;
+}
+.ptab.active{background:var(--yw);}
+.ptab-add{background:var(--gn);border-style:dashed;}
+
+/* summary bar */
+.pl-sum{padding:7px 12px;background:rgba(181,123,255,.15);border-bottom:2.5px solid var(--bk);font-size:.7rem;font-weight:800;color:#555;display:flex;gap:10px;flex-wrap:wrap;flex-shrink:0;}
+
+/* day blocks */
+.pl-days{flex:1;overflow-y:auto;padding:8px;}
+.pl-days::-webkit-scrollbar{width:4px;}
+.pl-days::-webkit-scrollbar-thumb{background:var(--bk);border-radius:2px;}
+
+.day-block{margin-bottom:12px;}
+.day-lbl{
+  display:flex;align-items:center;justify-content:space-between;
+  border:var(--bdt);border-radius:10px;padding:6px 10px;
+  box-shadow:var(--sh);margin-bottom:5px;gap:6px;
+}
+.day-lbl-l{display:flex;align-items:center;gap:7px;flex:1;min-width:0;}
+.day-edit{font-family:var(--fh);font-size:.88rem;outline:none;border-bottom:2px dashed transparent;cursor:text;min-width:30px;max-width:100px;white-space:nowrap;overflow:hidden;}
+.day-edit:focus{border-bottom-color:var(--bk);}
+.day-meta{font-size:.6rem;font-weight:700;color:#888;white-space:nowrap;}
+.day-lbl-r{display:flex;gap:5px;}
+.day-sort{padding:2px 8px;border:2px solid var(--bk);border-radius:6px;font-size:.65rem;font-weight:800;cursor:pointer;background:var(--wh);box-shadow:2px 2px 0 var(--bk);transition:all .12s;}
+.day-sort:hover{background:var(--bl);}
+.day-sort:active{transform:translate(2px,2px);box-shadow:none;}
+.day-rm{width:24px;height:24px;border:2px solid var(--bk);border-radius:6px;background:var(--rd);color:#fff;font-size:.75em;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--bk);transition:all .12s;}
+.day-rm:active{transform:translate(2px,2px);box-shadow:none;}
+
+.drop-zone{min-height:50px;border:3px dashed var(--bk);border-radius:10px;padding:5px;display:flex;flex-direction:column;gap:4px;background:rgba(255,233,78,.15);transition:background .2s;}
+.drop-zone.over{background:rgba(255,233,78,.6);border-style:solid;}
+.dz-hint{text-align:center;font-size:.68rem;font-weight:700;color:#bbb;padding:10px;pointer-events:none;}
+
+.pi{display:flex;align-items:center;gap:6px;background:var(--wh);border:2.5px solid var(--bk);border-radius:9px;padding:6px 8px;cursor:grab;box-shadow:2px 2px 0 var(--bk);transition:opacity .15s;}
+.pi.dragging{opacity:.3;cursor:grabbing;}
+.pi-drag{font-size:.9em;color:#ccc;letter-spacing:-2px;flex-shrink:0;}
+.pi-num{width:18px;height:18px;background:var(--bk);color:var(--wh);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:900;flex-shrink:0;}
+.pi-ico{font-size:1.1em;flex-shrink:0;}
+.pi-inf{flex:1;min-width:0;}
+.pi-name{font-family:var(--fh);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pi-dur{font-size:.6rem;font-weight:700;color:#999;}
+.pi-nav{font-size:.9em;text-decoration:none;opacity:.4;transition:opacity .15s;flex-shrink:0;}
+.pi-nav:hover{opacity:1;}
+.pi-rm{background:none;border:none;font-size:.95em;cursor:pointer;color:#ccc;flex-shrink:0;padding:0;}
+.pi-rm:hover{color:var(--rd);}
+.pi.sight-i     {border-left:5px solid var(--bl);}
+.pi.restaurant-i{border-left:5px solid var(--or);}
+.pi.nature-i    {border-left:5px solid var(--gn);}
+
+.pl-foot{padding:10px 12px;border-top:var(--bdt);display:flex;gap:7px;flex-shrink:0;background:var(--wh);}
+
+.empty-plan{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;color:#ccc;font-weight:800;font-size:.82rem;text-align:center;padding:20px;}
+.empty-plan .big{font-size:2.8em;}
+
+/* ══ LEAFLET POPUP ══ */
+.leaflet-popup-content-wrapper{border:var(--bdt)!important;border-radius:14px!important;box-shadow:var(--shl)!important;padding:0!important;overflow:hidden;font-family:var(--fb)!important;}
+.leaflet-popup-tip-container{display:none;}
+.leaflet-popup-content{margin:0!important;min-width:160px!important;}
+.pp{font-family:var(--fb);}
+.pp-head{padding:9px 13px;font-family:var(--fh);font-size:.95rem;display:flex;align-items:center;gap:7px;border-bottom:2.5px solid var(--bk);}
+.pp-sub{font-size:.68rem;font-weight:800;padding:4px 13px;color:#666;}
+.pp-acts{padding:5px 13px 9px;display:flex;gap:6px;}
+.pp-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:2.5px solid var(--bk);border-radius:7px;font-family:var(--fb);font-size:.68rem;font-weight:800;cursor:pointer;box-shadow:2px 2px 0 var(--bk);transition:all .12s;background:var(--yw);}
+.pp-btn:active{transform:translate(2px,2px);box-shadow:none;}
+.pp-btn-add{background:var(--pu);color:#fff;}
+
+/* ══ MODALS ══ */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.modal-ov.hidden{display:none;}
+.modal-box{background:var(--wh);border:var(--bdt);border-radius:18px;padding:22px;max-width:420px;width:92%;box-shadow:var(--shl);}
+.modal-ttl{font-family:var(--fh);font-size:1.2rem;margin-bottom:8px;}
+.modal-desc{font-size:.78rem;color:#777;font-weight:700;margin-bottom:12px;line-height:1.6;}
+.share-row{display:flex;gap:7px;margin-bottom:12px;}
+.share-row input{flex:1;border:var(--bdt);border-radius:8px;padding:7px 10px;font-family:var(--fb);font-size:.78rem;font-weight:700;background:#f5f5e8;outline:none;}
+.modal-close{width:100%;justify-content:center;background:var(--bk);color:#fff;border:var(--bdt);border-radius:9px;padding:8px;font-family:var(--fh);font-size:.95rem;cursor:pointer;box-shadow:var(--sh);margin-top:4px;}
+
+/* ══ RENAME MODAL ══ */
+.rename-input{width:100%;border:var(--bdt);border-radius:9px;padding:9px 12px;font-family:var(--fb);font-size:1rem;font-weight:700;background:var(--yw);margin-bottom:12px;outline:none;}
+.rename-input:focus{background:#fff9cc;}
+.rename-btns{display:flex;gap:8px;}
+.rbtn{flex:1;padding:8px;border:var(--bdt);border-radius:9px;font-family:var(--fh);font-size:.95rem;cursor:pointer;box-shadow:var(--sh);}
+.rbtn-ok{background:var(--gn);}
+.rbtn-cancel{background:var(--bk);color:#fff;}
+
+/* ══ TOAST ══ */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bk);color:#fff;padding:9px 20px;border-radius:30px;font-size:.8rem;font-weight:800;z-index:9999;transition:transform .3s;white-space:nowrap;box-shadow:var(--shl);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ══ SPEED LINES ══ */
+.speed-lines{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;opacity:0;}
+.speed-lines.show{animation:spd .5s ease forwards;}
+@keyframes spd{0%{opacity:.6;}100%{opacity:0;}}
+.speed-line{position:absolute;width:120%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,228,78,.8),transparent);transform-origin:left center;}
+
+/* ══ MOBILE PLANNER BACKDROP ══ */
+.pl-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:399;backdrop-filter:blur(2px);}
+.pl-backdrop.show{display:block;}
+
+/* ══ RWD ══ */
+@media(max-width:860px){
+  #sidebar{width:240px;min-width:160px;}
+  #planner.open{width:280px;min-width:220px;}
+}
+@media(max-width:600px){
+  header{padding:7px 10px;gap:7px;}
+  .h-logo{width:36px;height:36px;font-size:17px;}
+  .h-title{font-size:.95rem;}
+  .h-sub{display:none;}
+  .hbtn{padding:5px 9px;font-size:.72rem;}
+  .tabs-bar{padding:0 7px;}
+  .tab{padding:6px 10px;font-size:.76rem;}
+
+  main{flex-direction:column;}
+  #mapWrap{height:42vh;min-height:160px;flex:none;}
+  #dh1{width:100%;height:7px;cursor:row-resize;border-left:none;border-top:3px solid var(--bk);}
+  #dh1::after{transform:rotate(0deg);}
+  #dh2{display:none!important;}
+  #sidebar{width:100%;min-width:unset;flex:1;border-left:none;border-top:var(--bdt);}
+
+  /* Mobile: planner = fixed bottom sheet */
+  #planner{
+    position:fixed!important;
+    left:0;right:0;bottom:0;top:auto!important;
+    width:100%!important;min-width:unset!important;
+    height:0;border-left:none!important;
+    border-top:var(--bdt);border-radius:20px 20px 0 0;
+    box-shadow:0 -6px 0 var(--bk);
+    transition:height .3s cubic-bezier(.22,1,.36,1)!important;
+    z-index:400;
+  }
+  #planner.open{height:82vh;width:100%!important;}
+  #planner::before{content:'';display:block;width:36px;height:4px;background:rgba(0,0,0,.18);border-radius:2px;margin:9px auto 0;flex-shrink:0;}
+}
+</style>
 </head>
 <body>
 <div id="app">
 
-  <!-- HEADER -->
-  <header id="mainHeader">
-    <div class="header-logo">✈️</div>
-    <div class="header-text">
-      <h1 id="siteTitle">旅行漫遊地圖</h1>
-      <p id="siteSubtitle">My Comic Travel Map</p>
+  <header>
+    <div class="h-logo">✈️</div>
+    <div>
+      <div class="h-title" id="siteTitle">旅行漫遊地圖</div>
+      <div class="h-sub" id="siteSub">My Comic Travel Map</div>
     </div>
-    <div class="header-actions">
-      <button class="hdr-btn" id="plannerToggleBtn" onclick="togglePlanner()">
-        🗓️ 行程規劃 <span class="planner-count" id="plannerCount" style="display:none">0</span>
+    <div class="h-actions">
+      <button class="hbtn" onclick="togglePlanner()">
+        🗓️ 行程規劃
+        <span class="badge" id="planBadge" style="display:none">0</span>
       </button>
     </div>
   </header>
 
-  <!-- TABS -->
-  <div class="tabs-wrapper" id="tabsWrap"></div>
+  <div class="tabs-bar" id="tabsBar"></div>
 
-  <!-- MAIN -->
-  <main id="mainArea">
-
+  <main>
     <!-- MAP -->
     <div id="mapWrap">
       <div id="map"></div>
-      <div class="onboard-tip" id="onboardTip">👆 點圖釘查看景點，或拖曳到行程清單！</div>
     </div>
 
-    <!-- SIDEBAR: Place List -->
-    <div id="resizeHandle" title="拖曳調整寬度"></div>
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-head">
-        <div class="sidebar-country-title">
-          <span class="big-flag" id="sflag">🗺️</span>
-          <span id="stitle">選擇國家</span>
-        </div>
-        <div class="sidebar-desc" id="sdesc">從上方頁籤選擇你想探索的國家</div>
-        <div class="filter-bar" id="filterBar"></div>
+    <!-- DRAG HANDLE 1 (map ↔ sidebar) -->
+    <div class="drag-handle" id="dh1" title="拖曳調整"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+      <div class="sb-head">
+        <div class="sb-title"><span id="sflag">🗺️</span><span id="stitle">選擇國家</span></div>
+        <div class="sb-desc" id="sdesc">從上方選擇國家</div>
+        <div class="filter-row" id="filterRow"></div>
       </div>
       <div class="place-list" id="placeList"></div>
     </aside>
 
-    <!-- PLANNER RESIZE HANDLE -->
-    <div id="plannerResizeHandle"></div>
+    <!-- DRAG HANDLE 2 (sidebar ↔ planner, shown only when planner open) -->
+    <div class="drag-handle" id="dh2" title="拖曳調整"></div>
 
-    <!-- PLANNER PANEL -->
-    <div class="planner-panel" id="plannerPanel">
-      <div class="planner-head">
-        <span>🗓️ 行程規劃</span>
-        <div class="planner-head-actions">
-          <button class="pl-btn pl-btn-sm" onclick="addDay()">+ 加天</button>
-          <button class="pl-btn pl-btn-sm pl-btn-sort-all" onclick="autoSortAll()" title="所有天依距離優化">🗺️ 全部排序</button>
-          <button class="pl-btn pl-btn-sm pl-btn-danger" onclick="clearPlanner()">🗑️</button>
-          <button class="pl-btn pl-btn-close" onclick="togglePlanner()">✕</button>
+    <!-- PLANNER PANEL — flex sibling, NOT absolute -->
+    <div id="planner">
+      <div class="pl-head">
+        <span class="pl-title">🗓️ 行程規劃</span>
+        <div class="pl-acts">
+          <button class="plbtn plbtn-sort" onclick="autoSortAll()" title="依距離排序所有天">🗺️ 排序</button>
+          <button class="plbtn" onclick="addDay()">＋天</button>
+          <button class="plbtn plbtn-del" onclick="clearCurrentPlan()">🗑️</button>
+          <button class="plbtn plbtn-close" onclick="togglePlanner()">✕</button>
         </div>
       </div>
-      <div class="planner-summary" id="plannerSummary"></div>
-      <div class="planner-days" id="plannerDays"></div>
-      <div class="planner-footer">
-        <button class="pl-btn pl-btn-share" onclick="sharePlan()">🔗 分享行程</button>
-        <button class="pl-btn pl-btn-export" onclick="exportPlan()">📋 複製文字</button>
+      <!-- Multi-plan tabs -->
+      <div class="plan-tabs" id="planTabs"></div>
+      <!-- Summary -->
+      <div class="pl-sum" id="planSum"></div>
+      <!-- Day blocks -->
+      <div class="pl-days" id="planDays"></div>
+      <!-- Footer -->
+      <div class="pl-foot">
+        <button class="plbtn plbtn-share"  onclick="sharePlan()">🔗 分享行程</button>
+        <button class="plbtn plbtn-export" onclick="exportPlan()">📋 複製文字</button>
       </div>
     </div>
-
   </main>
 </div>
 
-<!-- PLANNER BACKDROP (mobile) -->
-<div class="planner-backdrop" id="plannerBackdrop" onclick="togglePlanner()"></div>
+<!-- Mobile planner backdrop -->
+<div class="pl-backdrop" id="plBackdrop" onclick="togglePlanner()"></div>
 
-<!-- SHARE MODAL -->
-<div class="modal-overlay" id="shareModal" onclick="closeShareModal()">
+<!-- Share modal -->
+<div class="modal-ov hidden" id="shareModal" onclick="closeShare()">
   <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-title">🔗 分享你的行程</div>
-    <div class="modal-desc">將以下連結分享給朋友，他們可以直接查看你規劃的行程！</div>
-    <div class="share-url-wrap">
+    <div class="modal-ttl">🔗 分享行程</div>
+    <div class="modal-desc">把這個連結傳給朋友，他們可以直接看到你規劃的行程！</div>
+    <div class="share-row">
       <input type="text" id="shareUrl" readonly>
-      <button class="pl-btn" onclick="copyShareUrl()">複製</button>
+      <button class="plbtn" onclick="copyShareUrl()">複製</button>
     </div>
-    <button class="pl-btn pl-btn-close-modal" onclick="closeShareModal()">關閉</button>
+    <button class="modal-close" onclick="closeShare()">關閉</button>
   </div>
 </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+<!-- Rename plan modal -->
+<div class="modal-ov hidden" id="renameModal" onclick="closeRename()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-ttl">✏️ 重新命名行程</div>
+    <input class="rename-input" type="text" id="renameInput" maxlength="20" placeholder="輸入行程名稱" onkeydown="if(event.key==='Enter')saveRename()">
+    <div class="rename-btns">
+      <button class="rbtn rbtn-ok"     onclick="saveRename()">確定</button>
+      <button class="rbtn rbtn-cancel" onclick="closeRename()">取消</button>
+    </div>
+  </div>
+</div>
 
-<!-- Speed lines -->
+<div class="toast" id="toast"></div>
 <div class="speed-lines" id="speedLines">
   <div class="speed-line" style="top:20%;transform:rotate(-8deg)"></div>
-  <div class="speed-line" style="top:40%;transform:rotate(-3deg)"></div>
-  <div class="speed-line" style="top:60%;transform:rotate(3deg)"></div>
-  <div class="speed-line" style="top:80%;transform:rotate(8deg)"></div>
+  <div class="speed-line" style="top:45%;transform:rotate(-2deg)"></div>
+  <div class="speed-line" style="top:70%;transform:rotate(5deg)"></div>
 </div>
 
 <script src="js/data.js"></script>
 <script src="js/map.js"></script>
-<script src="js/planner.js"></script>
-<script src="js/app.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════════
+// TRAVEL MAP — Main Script (inline, self-contained)
+// ════════════════════════════════════════════════════════════════
+
+const TYPE = {
+  sight:      {label:'景點',color:'#4FC3F7',emoji:'🏛️'},
+  restaurant: {label:'餐廳',color:'#FF9A3C',emoji:'🍽️'},
+  nature:     {label:'自然',color:'#69D84F',emoji:'🌿'}
+};
+
+// ── App State ──
+let currentCountry  = null;
+let activeFilters   = new Set(['sight','restaurant','nature']);
+let plannerOpen     = false;
+
+// ── Multi-Plan State ──
+// plans = [ { id, name, days: [ {id, label, items:[]} ] } ]
+let plans       = [ newPlan(1) ];
+let currentPlanIdx = 0;
+let dayCounter  = 1;
+let renamingPlanIdx = null;
+let dragId = null, dragDayId = null;
+
+function newPlan(n) {
+  return { id:'plan_'+Date.now()+'_'+n, name:'行程 '+n, days:[{id:'d1',label:'第 1 天',items:[]}] };
+}
+function currentPlan() { return plans[currentPlanIdx]; }
+function currentDays() { return currentPlan().days; }
+
+// ════════════════════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadData();
+  const s = TRAVEL_DATA.site;
+  document.title = s.title;
+  document.getElementById('siteTitle').textContent = s.title;
+  document.getElementById('siteSub').textContent   = s.subtitle;
+
+  initMap();
+  buildTabs();
+  if (TRAVEL_DATA.countries.length) selectCountry(TRAVEL_DATA.countries[0]);
+
+  loadPlanFromUrl(); // shared plan via ?plan=
+  renderPlanTabs();
+  renderPlanner();
+
+  initDragResize();
+});
+
+// ════════════════════════════════════════════════════════════════
+// TABS & COUNTRY
+// ════════════════════════════════════════════════════════════════
+function buildTabs() {
+  const bar = document.getElementById('tabsBar');
+  bar.innerHTML = '';
+  TRAVEL_DATA.countries.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'tab'; b.dataset.id = c.id;
+    b.innerHTML = `<span>${c.flag}</span>${c.name}<span class="tab-n">${c.places.length}</span>`;
+    b.onclick = () => selectCountry(c);
+    bar.appendChild(b);
+  });
+}
+
+function selectCountry(c) {
+  currentCountry = c;
+  activeFilters  = new Set(['sight','restaurant','nature']);
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.id === c.id));
+  triggerSpeedLines();
+  flyToCountry(c.center, c.zoom);
+  loadCountryMarkers(c);
+  renderSidebar(c);
+}
+
+// ════════════════════════════════════════════════════════════════
+// SIDEBAR
+// ════════════════════════════════════════════════════════════════
+function renderSidebar(c) {
+  document.getElementById('sflag').textContent = c.flag;
+  document.getElementById('stitle').textContent = c.name;
+  document.getElementById('sdesc').textContent  = c.desc;
+
+  const row = document.getElementById('filterRow');
+  row.innerHTML = '';
+  [...new Set(c.places.map(p=>p.type))].forEach(type => {
+    const t = TYPE[type];
+    const chip = document.createElement('button');
+    chip.className = `fchip on-${type}`;
+    chip.dataset.type = type;
+    chip.textContent = `${t.emoji} ${t.label}`;
+    chip.onclick = () => {
+      if (activeFilters.has(type)) {
+        if (activeFilters.size === 1) return;
+        activeFilters.delete(type);
+        chip.classList.remove(`on-${type}`); chip.style.opacity='.4';
+      } else {
+        activeFilters.add(type);
+        chip.classList.add(`on-${type}`); chip.style.opacity='1';
+      }
+      renderCards(c); showMarkersOfTypes(c, activeFilters);
+    };
+    row.appendChild(chip);
+  });
+  renderCards(c);
+}
+
+function renderCards(c) {
+  const list = document.getElementById('placeList');
+  list.innerHTML = '';
+  c.places.filter(p => activeFilters.has(p.type)).forEach(pl => {
+    const t   = TYPE[pl.type];
+    const dur = fmtDur(pl.duration||60);
+    const added = isInAnyPlan(pl.id);
+    const card = document.createElement('div');
+    card.className = `pcard ${pl.type}`;
+    card.id = `card-${pl.id}`;
+    card.innerHTML = `
+      <div class="pcard-top" onclick="toggleCard('${pl.id}',${pl.lat},${pl.lng})">
+        <div class="pcard-ico">${pl.icon}</div>
+        <div class="pcard-info">
+          <div class="pcard-name">${pl.name}</div>
+          <span class="pcard-tag">${t.emoji} ${t.label}</span>
+          ${pl.tips?`<div class="pcard-meta">💡 ${pl.tips}${pl.duration?' · ⏱ '+dur:''}</div>`:''}
+        </div>
+        <div class="pcard-acts">
+          <button class="btn-add ${added?'on':''}" data-pid="${pl.id}"
+            title="${added?'已加入行程':'加入行程'}"
+            onclick="event.stopPropagation();quickAdd('${pl.id}')"
+          >${added?'✅':'➕'}</button>
+          <span class="chev" id="chev-${pl.id}">▾</span>
+        </div>
+      </div>
+      <div class="pcard-body" id="body-${pl.id}">
+        <p class="pdesc">${pl.desc}</p>
+        <div class="pbtns">
+          <a class="abtn abtn-nav" href="${pl.nav}" target="_blank">🧭 導航</a>
+          <a class="abtn abtn-art" href="${pl.article||'#'}" target="_blank">📝 文章</a>
+          <button class="abtn abtn-plan" onclick="quickAdd('${pl.id}')">➕ 加行程</button>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function toggleCard(id, lat, lng) {
+  const body = document.getElementById(`body-${id}`);
+  const chev = document.getElementById(`chev-${id}`);
+  const card = document.getElementById(`card-${id}`);
+  const was  = body.classList.contains('open');
+  document.querySelectorAll('.pcard-body').forEach(b=>b.classList.remove('open'));
+  document.querySelectorAll('.chev').forEach(c=>c.classList.remove('open'));
+  document.querySelectorAll('.pcard').forEach(c=>c.classList.remove('active'));
+  if (!was) {
+    body.classList.add('open'); chev.classList.add('open'); card.classList.add('active');
+    panToPlace(lat, lng); openMarkerPopup(id);
+  }
+}
+function scrollToCard(id) { document.getElementById(`card-${id}`)?.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+function focusCard(id) {
+  const pl = currentCountry?.places.find(p=>p.id===id); if(!pl) return;
+  if (!activeFilters.has(pl.type)) {
+    activeFilters.add(pl.type);
+    document.querySelector(`.fchip[data-type="${pl.type}"]`)?.classList.add(`on-${pl.type}`);
+    renderCards(currentCountry); showMarkersOfTypes(currentCountry, activeFilters);
+  }
+  scrollToCard(id); toggleCard(id, pl.lat, pl.lng);
+}
+
+// ════════════════════════════════════════════════════════════════
+// PLANNER — OPEN/CLOSE
+// ════════════════════════════════════════════════════════════════
+function togglePlanner() {
+  plannerOpen = !plannerOpen;
+  document.getElementById('planner').classList.toggle('open', plannerOpen);
+  document.getElementById('dh2').classList.toggle('show', plannerOpen && window.innerWidth > 600);
+  document.getElementById('plBackdrop').classList.toggle('show', plannerOpen && window.innerWidth <= 600);
+  if (plannerOpen) renderPlanner();
+  setTimeout(() => map?.invalidateSize(), 350);
+}
+function openPlanner() {
+  if (!plannerOpen) { plannerOpen = true; document.getElementById('planner').classList.add('open'); document.getElementById('dh2').classList.toggle('show', window.innerWidth>600); setTimeout(()=>map?.invalidateSize(),350); }
+  renderPlanner();
+}
+
+// ════════════════════════════════════════════════════════════════
+// MULTI-PLAN MANAGEMENT
+// ════════════════════════════════════════════════════════════════
+function renderPlanTabs() {
+  const bar = document.getElementById('planTabs');
+  bar.innerHTML = '';
+  plans.forEach((p,i) => {
+    const tab = document.createElement('div');
+    tab.className = `ptab${i===currentPlanIdx?' active':''}`;
+    tab.textContent = p.name;
+    tab.title = '點擊切換；雙擊重新命名';
+    tab.onclick = () => { currentPlanIdx = i; dayCounter = currentDays().length; renderPlanTabs(); renderPlanner(); };
+    tab.ondblclick = (e) => { e.stopPropagation(); openRename(i); };
+    bar.appendChild(tab);
+  });
+  // add new plan button
+  const add = document.createElement('div');
+  add.className = 'ptab ptab-add'; add.textContent = '＋ 新行程';
+  add.onclick = () => {
+    plans.push(newPlan(plans.length+1));
+    currentPlanIdx = plans.length-1;
+    dayCounter = 1;
+    renderPlanTabs(); renderPlanner();
+    showToast('✅ 已建立新行程！');
+  };
+  bar.appendChild(add);
+}
+
+function openRename(idx) {
+  renamingPlanIdx = idx;
+  document.getElementById('renameInput').value = plans[idx].name;
+  document.getElementById('renameModal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('renameInput').focus(),50);
+}
+function saveRename() {
+  const v = document.getElementById('renameInput').value.trim();
+  if (v && renamingPlanIdx !== null) { plans[renamingPlanIdx].name = v; renderPlanTabs(); }
+  closeRename();
+}
+function closeRename() { document.getElementById('renameModal').classList.add('hidden'); renamingPlanIdx=null; }
+
+// ════════════════════════════════════════════════════════════════
+// DAY MANAGEMENT
+// ════════════════════════════════════════════════════════════════
+function addDay() {
+  dayCounter++;
+  currentDays().push({id:'d'+dayCounter, label:'第 '+dayCounter+' 天', items:[]});
+  renderPlanner(); updateBadge();
+}
+function removeDay(dayId) {
+  if (currentDays().length===1) { showToast('⚠️ 至少保留一天'); return; }
+  const day   = currentDays().find(d=>d.id===dayId);
+  const first = currentDays().find(d=>d.id!==dayId);
+  day.items.forEach(i=>{ if(!first.items.find(x=>x.id===i.id)) first.items.push(i); });
+  currentPlan().days = currentDays().filter(d=>d.id!==dayId);
+  renderPlanner(); updateBadge(); showToast('景點已移入其他天');
+}
+function clearCurrentPlan() {
+  currentPlan().days = [{id:'d1',label:'第 1 天',items:[]}];
+  dayCounter=1; renderPlanner(); updateBadge(); updateAddBtns();
+}
+
+// ════════════════════════════════════════════════════════════════
+// ADD / REMOVE PLACES FROM PLAN
+// ════════════════════════════════════════════════════════════════
+function isInAnyPlan(id) { return plans.some(p=>p.days.some(d=>d.items.some(i=>i.id===id))); }
+function isInCurrentPlan(id) { return currentDays().some(d=>d.items.some(i=>i.id===id)); }
+
+function quickAdd(placeId) {
+  if (isInCurrentPlan(placeId)) { showToast('✅ 已在目前行程中！'); return; }
+  const pl = findPlace(placeId); if(!pl) return;
+  currentDays()[0].items.push(makePlanItem(pl));
+  updateBadge(); updateAddBtns(); renderPlanner();
+  if (!plannerOpen) openPlanner();
+  showToast('📌 已加入 '+currentPlan().name+'！');
+}
+function removeFromPlan(id, dayId) {
+  const day = currentDays().find(d=>d.id===dayId); if(!day) return;
+  day.items = day.items.filter(i=>i.id!==id);
+  renderPlanner(); updateBadge(); updateAddBtns();
+}
+function makePlanItem(pl) {
+  return {id:pl.id, name:pl.name, icon:pl.icon, type:pl.type, duration:pl.duration||60, nav:pl.nav||'', lat:pl.lat, lng:pl.lng};
+}
+function updateBadge() {
+  const total = plans.reduce((s,p)=>s+p.days.reduce((ss,d)=>ss+d.items.length,0),0);
+  const el = document.getElementById('planBadge');
+  el.textContent=total; el.style.display=total?'':'none';
+}
+function updateAddBtns() {
+  document.querySelectorAll('.btn-add[data-pid]').forEach(b=>{
+    const added = isInAnyPlan(b.dataset.pid);
+    b.classList.toggle('on',added); b.title=added?'已加入行程':'加入行程'; b.textContent=added?'✅':'➕';
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// RENDER PLANNER
+// ════════════════════════════════════════════════════════════════
+function renderPlanner() {
+  renderPlanTabs();
+  const days = currentDays();
+  const total = days.reduce((s,d)=>s+d.items.length,0);
+  const mins  = days.reduce((s,d)=>s+d.items.reduce((ss,i)=>ss+(i.duration||60),0),0);
+  const km    = days.reduce((s,d)=>s+(d.items.length>=2?calcRouteKm(d.items):0),0);
+  document.getElementById('planSum').innerHTML =
+    `<span>📅 ${days.length}天</span><span>📍 ${total}站</span><span>⏱ ${fmtDur(mins)}</span>${km?`<span>🛣 ~${km}km</span>`:''}`;
+
+  const container = document.getElementById('planDays');
+  container.innerHTML='';
+
+  if(total===0 && days.length===1){
+    container.innerHTML=`<div class="empty-plan"><div class="big">🗺️</div><div>還沒有任何行程</div><div style="font-size:.68rem;color:#bbb;margin-top:5px">點景點的 ➕，或從地圖彈窗加入</div></div>`;
+    return;
+  }
+
+  const dayBgs=['#FFE94E','#FFD0E8','#C8F0FF','#D0FFD8','#E8DAFF','#FFE0C0'];
+  days.forEach((day,di)=>{
+    const dm   = day.items.reduce((s,i)=>s+(i.duration||60),0);
+    const dkm  = day.items.length>=2?calcRouteKm(day.items):0;
+    const wrap = document.createElement('div');
+    wrap.className='day-block';
+    wrap.innerHTML=`
+      <div class="day-lbl" style="background:${dayBgs[di%dayBgs.length]}">
+        <div class="day-lbl-l">
+          <span>📅</span>
+          <span class="day-edit" contenteditable="true"
+            onblur="renameDay('${day.id}',this.textContent)"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+          >${day.label}</span>
+          <span class="day-meta">${day.items.length}站·${fmtDur(dm)}${dkm?'·~'+dkm+'km':''}</span>
+        </div>
+        <div class="day-lbl-r">
+          <button class="day-sort" onclick="sortDay('${day.id}')">🗺️ 排序</button>
+          <button class="day-rm"   onclick="removeDay('${day.id}')">✕</button>
+        </div>
+      </div>
+      <div class="drop-zone" id="dz-${day.id}" data-day="${day.id}">
+        ${day.items.length===0?'<div class="dz-hint">拖曳景點到這裡 或 點 ➕</div>':''}
+        ${day.items.map((item,ii)=>renderPI(item,day.id,ii)).join('')}
+      </div>`;
+    container.appendChild(wrap);
+    initDropZone(document.getElementById(`dz-${day.id}`));
+  });
+
+  // re-attach drag events
+  container.querySelectorAll('.pi[draggable]').forEach(el=>{
+    el.addEventListener('dragstart', onDragStart);
+    el.addEventListener('dragend',   onDragEnd);
+  });
+}
+
+function renderPI(item, dayId, idx) {
+  return `<div class="pi ${item.type}-i" draggable="true" data-id="${item.id}" data-day="${dayId}">
+    <span class="pi-drag">⠿</span>
+    <span class="pi-num">${idx+1}</span>
+    <span class="pi-ico">${item.icon}</span>
+    <div class="pi-inf"><div class="pi-name">${item.name}</div><div class="pi-dur">⏱ ${fmtDur(item.duration)}</div></div>
+    <a class="pi-nav" href="${item.nav}" target="_blank" onclick="event.stopPropagation()">🧭</a>
+    <button class="pi-rm" onclick="removeFromPlan('${item.id}','${dayId}')">✕</button>
+  </div>`;
+}
+
+function renameDay(dayId, text) {
+  const day = currentDays().find(d=>d.id===dayId);
+  if(day&&text.trim()) day.label=text.trim();
+}
+
+// ════════════════════════════════════════════════════════════════
+// DISTANCE SORT (Haversine + Nearest-Neighbour)
+// ════════════════════════════════════════════════════════════════
+function hav(a,b,c,d){const R=6371,dL=(c-a)*Math.PI/180,dG=(d-b)*Math.PI/180,x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dG/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+function nnSort(items){if(items.length<=2)return[...items];const u=[...items],r=[u.shift()];while(u.length){const last=r[r.length-1];let bi=0,bd=Infinity;u.forEach((x,i)=>{const d=hav(last.lat,last.lng,x.lat,x.lng);if(d<bd){bd=d;bi=i;}});r.push(u.splice(bi,1)[0]);}return r;}
+function calcRouteKm(items){let t=0;for(let i=0;i<items.length-1;i++)t+=hav(items[i].lat,items[i].lng,items[i+1].lat,items[i+1].lng);return Math.round(t);}
+function sortDay(dayId){const d=currentDays().find(x=>x.id===dayId);if(!d||d.items.length<2){showToast('⚠️ 至少需要2個地點');return;}d.items=nnSort(d.items);renderPlanner();drawRoute(d);showToast('🗺️ 已依距離優化！');}
+function autoSortAll(){currentDays().forEach(d=>{if(d.items.length>=2)d.items=nnSort(d.items);});renderPlanner();showToast('🗺️ 全部天數已優化！');}
+
+function drawRoute(day) {
+  if(!map) return;
+  if(window._rl) window._rl.forEach(l=>{try{map.removeLayer(l);}catch(e){}});
+  window._rl=[];
+  if(day.items.length<2) return;
+  const coords=day.items.map(i=>[i.lat,i.lng]);
+  const colors=['#FF6B9D','#4FC3F7','#69D84F','#FF9A3C','#B57BFF'];
+  const line=L.polyline(coords,{color:colors[currentDays().indexOf(day)%5],weight:4,opacity:.8,dashArray:'8,5'}).addTo(map);
+  window._rl=[line];
+  map.fitBounds(line.getBounds(),{padding:[50,50]});
+}
+
+// ════════════════════════════════════════════════════════════════
+// DRAG & DROP
+// ════════════════════════════════════════════════════════════════
+function onDragStart(e){dragId=e.currentTarget.dataset.id;dragDayId=e.currentTarget.dataset.day;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
+function onDragEnd(e){e.currentTarget.classList.remove('dragging');document.querySelectorAll('.drop-zone').forEach(z=>z.classList.remove('over'));}
+function initDropZone(el){
+  el.addEventListener('dragover',e=>{e.preventDefault();document.querySelectorAll('.drop-zone').forEach(z=>z.classList.remove('over'));el.classList.add('over');});
+  el.addEventListener('dragleave',e=>{if(!el.contains(e.relatedTarget))el.classList.remove('over');});
+  el.addEventListener('drop',e=>{
+    e.preventDefault();el.classList.remove('over');if(!dragId) return;
+    const tDayId=el.dataset.day;
+    if(dragDayId===tDayId){
+      const day=currentDays().find(d=>d.id===tDayId);
+      const after=getAfterEl(el,e.clientY);
+      const item=day.items.find(i=>i.id===dragId);
+      day.items=day.items.filter(i=>i.id!==dragId);
+      if(!after)day.items.push(item);
+      else{const idx=day.items.findIndex(i=>i.id===after.dataset.id);day.items.splice(Math.max(0,idx),0,item);}
+    }else{
+      const src=currentDays().find(d=>d.id===dragDayId);
+      const tgt=currentDays().find(d=>d.id===tDayId);
+      if(!src||!tgt)return;
+      if(tgt.items.find(i=>i.id===dragId)){showToast('已在那天了');return;}
+      const item=src.items.find(i=>i.id===dragId);
+      src.items=src.items.filter(i=>i.id!==dragId);
+      tgt.items.push(item);
+      showToast('↔️ 已移至'+tgt.label);
+    }
+    dragId=null;dragDayId=null;renderPlanner();updateBadge();
+  });
+}
+function getAfterEl(c,y){return[...c.querySelectorAll('.pi:not(.dragging)')].reduce((cl,el)=>{const b=el.getBoundingClientRect(),o=y-b.top-b.height/2;return(o<0&&o>cl.offset)?{offset:o,element:el}:cl;},{offset:-Infinity}).element;}
+
+// ════════════════════════════════════════════════════════════════
+// SHARE & EXPORT
+// ════════════════════════════════════════════════════════════════
+function sharePlan(){
+  const payload=currentDays().map(d=>({l:d.label,ids:d.items.map(i=>i.id)}));
+  const encoded=btoa(encodeURIComponent(JSON.stringify(payload)));
+  const url=location.href.split('?')[0]+'?plan='+encoded;
+  document.getElementById('shareUrl').value=url;
+  document.getElementById('shareModal').classList.remove('hidden');
+}
+function copyShareUrl(){navigator.clipboard.writeText(document.getElementById('shareUrl').value).then(()=>showToast('✅ 連結已複製！')).catch(()=>{document.getElementById('shareUrl').select();document.execCommand('copy');showToast('✅ 已複製！');});}
+function closeShare(){document.getElementById('shareModal').classList.add('hidden');}
+
+function loadPlanFromUrl(){
+  const raw=new URLSearchParams(location.search).get('plan');if(!raw)return;
+  try{
+    const data=JSON.parse(decodeURIComponent(atob(raw)));
+    const imported={id:'plan_shared',name:'分享的行程',days:[]};
+    data.forEach((d,i)=>{const items=d.ids.map(id=>{const pl=findPlace(id);return pl?makePlanItem(pl):null;}).filter(Boolean);imported.days.push({id:'d'+(i+1),label:d.l,items});});
+    plans.push(imported);currentPlanIdx=plans.length-1;
+    dayCounter=imported.days.length;
+    openPlanner();updateBadge();updateAddBtns();showToast('🗓️ 已載入分享行程！');
+  }catch(e){console.warn('Invalid plan URL',e);}
+}
+
+function exportPlan(){
+  let t='✈️ '+currentPlan().name+'\n'+'═'.repeat(24)+'\n\n';
+  currentDays().forEach(d=>{const m=d.items.reduce((s,i)=>s+(i.duration||60),0);t+=`【${d.label}】（約 ${fmtDur(m)}）\n`;d.items.forEach((x,i)=>{t+=`  ${i+1}. ${x.icon} ${x.name}（${fmtDur(x.duration)}）\n`;});if(d.items.length>=2)t+=`  🛣️ ~${calcRouteKm(d.items)}km\n`;t+='\n';});
+  t+='─'.repeat(24)+'\n✈️ 旅行漫遊地圖 '+location.href.split('?')[0];
+  navigator.clipboard.writeText(t).then(()=>showToast('📋 行程已複製！')).catch(()=>showToast('⚠️ 請手動複製'));
+}
+
+// ════════════════════════════════════════════════════════════════
+// DRAG-TO-RESIZE (desktop only)
+// ════════════════════════════════════════════════════════════════
+function initDragResize() {
+  if (window.innerWidth <= 600) return;
+  makeDragger('dh1', 'sidebar',  (w) => { document.getElementById('sidebar').style.width = w+'px'; });
+  makeDragger('dh2', 'planner',  (w) => { document.getElementById('planner').style.width = w+'px'; });
+}
+
+function makeDragger(handleId, targetId, applyW) {
+  const handle = document.getElementById(handleId);
+  const target = document.getElementById(targetId);
+  if(!handle||!target) return;
+  let dragging=false, startX=0, startW=0;
+
+  handle.addEventListener('mousedown', e=>{
+    dragging=true; startX=e.clientX; startW=target.offsetWidth;
+    handle.classList.add('active');
+    document.body.style.cursor='col-resize'; document.body.style.userSelect='none';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    // dh1: drag left = wider sidebar
+    // dh2: drag left = wider planner
+    const delta = (handleId==='dh1') ? (startX - e.clientX) : (startX - e.clientX);
+    const newW  = Math.min(Math.max(startW + delta, 180), window.innerWidth*0.52);
+    applyW(newW); map?.invalidateSize();
+  });
+  document.addEventListener('mouseup', ()=>{
+    if(!dragging) return;
+    dragging=false; handle.classList.remove('active');
+    document.body.style.cursor=''; document.body.style.userSelect='';
+    map?.invalidateSize();
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════════
+function findPlace(id){if(!TRAVEL_DATA)return null;for(const c of TRAVEL_DATA.countries){const p=c.places.find(x=>x.id===id);if(p)return p;}return null;}
+function fmtDur(m){if(!m)return'60min';return m>=60?Math.floor(m/60)+'h'+(m%60?m%60+'m':''):m+'min';}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('show'),2600);}
+function triggerSpeedLines(){const el=document.getElementById('speedLines');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),600);}
+</script>
 </body>
 </html>
