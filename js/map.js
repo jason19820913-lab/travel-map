@@ -10,14 +10,15 @@ const TYPE_CFG = {
 
 function initMap() {
   map = L.map('map', { zoomControl: true });
-  L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-    attribution: '© <a href="https://stadiamaps.com/">Stadia Maps</a> © <a href="https://openmaptiles.org/">OpenMapTiles</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
     maxZoom: 19
   }).addTo(map);
 
   // Comic filter on tiles
   const s = document.createElement('style');
-  s.textContent = '.leaflet-tile{filter:saturate(1.6) contrast(1.1) brightness(1.05) hue-rotate(5deg) !important;}';
+  s.textContent = '.leaflet-tile-pane{filter:saturate(1.8) contrast(1.15) brightness(1.02) hue-rotate(8deg);}';
   document.head.appendChild(s);
 
   map.setView([25, 110], 4);
