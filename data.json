@@ -31,6 +31,20 @@
           "nav": "https://maps.google.com/?q=34.6865,135.18792",
           "id": "p_1773465811617",
           "phone": "+81787714914"
+        },
+        {
+          "name": "MOURIYAモーリヤ 三宮店",
+          "icon": "🥩",
+          "type": "restaurant",
+          "lat": 34.69281,
+          "lng": 135.19151,
+          "tips": "",
+          "desc": "神戶牛鐵板燒",
+          "article": "https://jasonslife.tw/mouriya/",
+          "phone": "+81783211990",
+          "duration": 90,
+          "nav": "https://maps.google.com/?q=34.69281,135.19151",
+          "id": "p_1773470346860"
         }
       ]
     },
