@@ -16,7 +16,7 @@ function initMap() {
     maxZoom: 19
   }).addTo(map);
 
-  // Comic filter on tiles
+  // Comic colour filter
   const s = document.createElement('style');
   s.textContent = '.leaflet-tile-pane{filter:saturate(1.8) contrast(1.15) brightness(1.02) hue-rotate(8deg);}';
   document.head.appendChild(s);
@@ -29,31 +29,53 @@ function loadCountryMarkers(country) {
   country.places.forEach(pl => addMarker(pl));
 }
 
+// ── Diamond-pin marker (漫畫風菱形圖釘) ──
 function addMarker(pl) {
-  const cfg = TYPE_CFG[pl.type] || TYPE_CFG.sight;
-  const html = `<div class="marker-body" style="background:${cfg.color}"><span class="marker-emoji">${pl.icon}</span></div>`;
-  const icon = L.divIcon({ html, className:'comic-marker', iconSize:[38,38], iconAnchor:[19,38], popupAnchor:[0,-42] });
+  const cfg  = TYPE_CFG[pl.type] || TYPE_CFG.sight;
+  const html = `
+    <div style="
+      width:40px;height:40px;
+      background:${cfg.color};
+      border:3.5px solid #1a1a1a;
+      border-radius:50% 50% 50% 4px;
+      transform:rotate(-45deg);
+      box-shadow:3px 3px 0 #1a1a1a;
+      display:flex;align-items:center;justify-content:center;
+    ">
+      <span style="transform:rotate(45deg);font-size:17px;line-height:1;">${pl.icon}</span>
+    </div>`;
+  const icon = L.divIcon({
+    html,
+    className: '',
+    iconSize:   [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor:[0, -44]
+  });
   const m = L.marker([pl.lat, pl.lng], { icon }).addTo(map);
   m.placeId = pl.id;
-
-  m.bindPopup(buildPopupHTML(pl, cfg), { minWidth:185, maxWidth:250 });
-
-  m.on('click', () => {
-    scrollToCard(pl.id);
-    openCard(pl.id);
-  });
+  m.bindPopup(buildPopup(pl, cfg), { minWidth:210, maxWidth:260 });
+  m.on('click', () => { scrollToCard(pl.id); openCard(pl.id); });
   markers.push(m);
 }
 
-function buildPopupHTML(pl, cfg) {
-  return `<div class="comic-popup">
-    <div class="popup-header" style="background:${cfg.color}">
-      <span style="font-size:1.4em">${pl.icon}</span><span>${pl.name}</span>
+// ── Popup: 詳情 / 導航 / 電話 ──
+function buildPopup(pl, cfg) {
+  const navUrl  = `https://www.google.com/maps/dir/?api=1&destination=${pl.lat},${pl.lng}&travelmode=walking`;
+  const telHtml = pl.phone
+    ? `<a class="pp-btn pp-btn-tel" href="tel:${pl.phone}">📞 電話</a>`
+    : '';
+  return `<div class="pp">
+    <div class="pp-head" style="background:${cfg.color}">
+      <span style="font-size:1.45em">${pl.icon}</span>
+      <div>
+        <div style="font-family:var(--fh,'Fredoka One',sans-serif);font-size:.98rem;line-height:1.2">${pl.name}</div>
+        <div style="font-size:.68rem;font-weight:800;opacity:.75">${cfg.emoji} ${cfg.label}${pl.tips ? ' · ' + pl.tips : ''}</div>
+      </div>
     </div>
-    <div class="popup-sub">${cfg.emoji} ${cfg.label}${pl.tips ? ' · ' + pl.tips : ''}</div>
-    <div class="popup-actions">
-      <button class="popup-btn" onclick="focusCard('${pl.id}')">📋 詳情</button>
-      <button class="popup-btn popup-btn-plan" onclick="quickAddToPlan('${pl.id}')">➕ 加行程</button>
+    <div class="pp-acts">
+      <button class="pp-btn" onclick="focusCard('${pl.id}')">📋 詳情</button>
+      <a class="pp-btn pp-btn-nav" href="${navUrl}" target="_blank">🧭 導航</a>
+      ${telHtml}
     </div>
   </div>`;
 }
@@ -74,15 +96,6 @@ function showMarkersOfTypes(country, activeTypes) {
   });
 }
 
-function panToPlace(lat, lng) {
-  map.panTo([lat, lng], { animate: true, duration: 0.7 });
-}
-
-function flyToCountry(center, zoom) {
-  map.flyTo(center, zoom, { duration: 1.0, easeLinearity: 0.4 });
-}
-
-function openMarkerPopup(placeId) {
-  const m = markers.find(m => m.placeId === placeId);
-  if (m) m.openPopup();
-}
+function panToPlace(lat, lng) { map.panTo([lat, lng], { animate:true, duration:0.7 }); }
+function flyToCountry(c, z)   { map.flyTo(c, z, { duration:1.0, easeLinearity:0.4 }); }
+function openMarkerPopup(id)  { const m = markers.find(x=>x.placeId===id); if(m) m.openPopup(); }
