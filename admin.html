@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚙️ 後台管理 — 旅行漫遊地圖</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Noto+Sans+TC:wght@700;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#1a1a1a;--white:#fffef5;--yellow:#FFE94E;--pink:#FF6B9D;
+  --blue:#4FC3F7;--green:#69D84F;--orange:#FF9A3C;--purple:#B57BFF;--red:#FF4B4B;
+  --border:3px solid var(--black);--border-thick:4px solid var(--black);
+  --shadow:4px 4px 0 var(--black);--shadow-lg:6px 6px 0 var(--black);
+  --radius:16px;
+  --font-head:'Fredoka One','Noto Sans TC',sans-serif;
+  --font-body:'Nunito','Noto Sans TC',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--yellow);color:var(--black);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,.07) 1.5px,transparent 1.5px);background-size:18px 18px;pointer-events:none;z-index:0;}
+
+/* LOGIN */
+#loginScreen{
+  position:fixed;inset:0;background:var(--yellow);z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+}
+.login-box{
+  background:var(--white);border:var(--border-thick);border-radius:24px;
+  padding:36px 40px;text-align:center;box-shadow:var(--shadow-lg);
+  max-width:360px;width:90%;
+}
+.login-icon{font-size:3rem;margin-bottom:12px;display:block;animation:wiggle 3s ease-in-out infinite;}
+@keyframes wiggle{0%,100%{transform:rotate(-5deg);}50%{transform:rotate(5deg);}}
+.login-box h1{font-family:var(--font-head);font-size:1.6rem;margin-bottom:6px;}
+.login-box p{font-size:.8rem;color:#777;font-weight:700;margin-bottom:20px;}
+.login-box input{
+  width:100%;border:var(--border-thick);border-radius:10px;padding:10px 14px;
+  font-family:var(--font-body);font-size:1rem;font-weight:700;
+  background:var(--yellow);margin-bottom:12px;
+}
+.login-box input:focus{outline:none;background:#fff9cc;}
+.btn-login{
+  width:100%;padding:10px;background:var(--pink);color:var(--white);
+  border:var(--border-thick);border-radius:12px;font-family:var(--font-head);
+  font-size:1.1rem;cursor:pointer;box-shadow:var(--shadow);transition:all .12s;
+}
+.btn-login:active{transform:translate(4px,4px);box-shadow:none;}
+.login-err{color:var(--red);font-size:.8rem;font-weight:800;margin-top:8px;display:none;}
+
+/* ADMIN LAYOUT */
+#adminApp{display:none;}
+header{
+  background:var(--black);border-bottom:var(--border-thick);
+  padding:12px 24px;display:flex;align-items:center;gap:14px;
+  box-shadow:0 4px 0 rgba(0,0,0,.3);position:sticky;top:0;z-index:100;
+}
+header h1{font-family:var(--font-head);color:var(--yellow);font-size:1.5rem;text-shadow:2px 2px 0 var(--pink);}
+.hdr-back{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
+  background:var(--yellow);border:2.5px solid var(--yellow);border-radius:9px;
+  font-family:var(--font-body);font-size:.8rem;font-weight:800;
+  text-decoration:none;color:var(--black);box-shadow:3px 3px 0 rgba(255,233,78,.4);
+  transition:all .12s;margin-left:auto;
+}
+.hdr-back:hover{background:#fff;border-color:#fff;}
+
+.admin-container{max-width:960px;margin:0 auto;padding:24px 20px;position:relative;z-index:1;}
+
+/* NOTICE BOX */
+.notice{
+  background:var(--white);border:var(--border-thick);border-radius:14px;
+  padding:14px 18px;margin-bottom:20px;box-shadow:var(--shadow);
+  border-left:6px solid var(--orange);
+}
+.notice h3{font-family:var(--font-head);font-size:1rem;margin-bottom:6px;}
+.notice p{font-size:.78rem;line-height:1.7;color:#444;}
+.notice code{
+  background:var(--yellow);border:2px solid var(--black);border-radius:5px;
+  padding:2px 7px;font-family:monospace;font-size:.82rem;
+}
+
+/* SECTION */
+.section{
+  background:var(--white);border:var(--border-thick);border-radius:20px;
+  padding:20px;box-shadow:var(--shadow);margin-bottom:20px;
+}
+.section-title{
+  font-family:var(--font-head);font-size:1.2rem;margin-bottom:16px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:var(--border);padding-bottom:10px;
+}
+.section-title .badge{
+  background:var(--pink);color:#fff;padding:2px 10px;
+  border:2px solid var(--black);border-radius:20px;font-size:.72rem;
+}
+
+/* COUNTRY LIST */
+.country-list{display:flex;flex-direction:column;gap:10px;}
+.country-item{
+  border:var(--border);border-radius:14px;overflow:hidden;
+  box-shadow:3px 3px 0 var(--black);
+}
+.country-header{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  cursor:pointer;user-select:none;
+}
+.country-header:hover{opacity:.85;}
+.c-flag{font-size:1.6em;}
+.c-name{font-family:var(--font-head);font-size:1rem;flex:1;}
+.c-count{font-size:.72rem;font-weight:700;color:#777;}
+.c-actions{display:flex;gap:6px;}
+.icon-btn{
+  width:30px;height:30px;border:2px solid var(--black);border-radius:7px;
+  background:var(--white);cursor:pointer;font-size:.9em;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:2px 2px 0 var(--black);transition:all .12s;
+}
+.icon-btn:active{transform:translate(2px,2px);box-shadow:none;}
+.icon-btn.del{background:var(--red);color:#fff;}
+.icon-btn.edit{background:var(--yellow);}
+
+.country-places{
+  border-top:var(--border);padding:10px 14px;
+  background:#fafaf0;display:none;
+}
+.country-places.open{display:block;}
+.places-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-top:8px;}
+
+.place-row{
+  border:2.5px solid var(--black);border-radius:10px;padding:9px 11px;
+  background:var(--white);box-shadow:2px 2px 0 var(--black);
+  display:flex;align-items:center;gap:8px;
+}
+.pr-icon{font-size:1.2em;flex-shrink:0;}
+.pr-info{flex:1;min-width:0;}
+.pr-name{font-family:var(--font-head);font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pr-type{font-size:.65rem;font-weight:800;padding:1px 7px;border-radius:10px;border:1.5px solid var(--black);display:inline-block;margin-top:2px;}
+.pr-type.sight     {background:var(--blue);}
+.pr-type.restaurant{background:var(--orange);}
+.pr-type.nature    {background:var(--green);}
+.pr-actions{display:flex;gap:5px;}
+
+.add-place-btn{
+  margin-top:10px;display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border:var(--border);border-radius:10px;
+  font-family:var(--font-body);font-size:.78rem;font-weight:800;
+  background:var(--green);cursor:pointer;box-shadow:var(--shadow);transition:all .12s;
+}
+.add-place-btn:active{transform:translate(4px,4px);box-shadow:none;}
+
+/* JSON EDITOR */
+.json-area{
+  width:100%;min-height:300px;border:var(--border);border-radius:10px;
+  padding:12px;font-family:monospace;font-size:.8rem;
+  background:#1e1e2e;color:#cdd6f4;line-height:1.6;resize:vertical;
+}
+.json-area:focus{outline:none;border-color:var(--yellow);}
+.json-actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.modal-overlay.hidden{display:none;}
+.modal-box{
+  background:var(--white);border:var(--border-thick);border-radius:20px;
+  padding:24px;max-width:500px;width:94%;box-shadow:var(--shadow-lg);
+  max-height:90vh;overflow-y:auto;
+}
+.modal-title{font-family:var(--font-head);font-size:1.3rem;margin-bottom:16px;border-bottom:var(--border);padding-bottom:10px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.full{grid-column:1/-1;}
+label{font-size:.75rem;font-weight:800;color:#555;}
+input,select,textarea{
+  border:var(--border);border-radius:9px;padding:8px 11px;
+  font-family:var(--font-body);font-size:.85rem;font-weight:700;
+  background:var(--yellow);
+}
+input:focus,select:focus,textarea:focus{outline:none;background:#fff9cc;}
+textarea{resize:vertical;min-height:80px;}
+.modal-actions{display:flex;gap:10px;margin-top:16px;}
+.btn-save{background:var(--green);border:var(--border);border-radius:10px;padding:9px 20px;font-family:var(--font-head);font-size:1rem;cursor:pointer;box-shadow:var(--shadow);flex:1;transition:all .12s;}
+.btn-save:active{transform:translate(4px,4px);box-shadow:none;}
+.btn-cancel{background:var(--black);color:#fff;border:var(--border);border-radius:10px;padding:9px 20px;font-family:var(--font-head);font-size:1rem;cursor:pointer;box-shadow:var(--shadow);transition:all .12s;}
+.btn-cancel:active{transform:translate(4px,4px);box-shadow:none;}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--black);color:var(--white);padding:10px 22px;
+  border-radius:30px;font-size:.82rem;font-weight:800;z-index:9999;
+  transition:transform .3s ease;white-space:nowrap;box-shadow:var(--shadow-lg);
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* action buttons */
+.action-btn{
+  display:inline-flex;align-items:center;gap:6px;padding:8px 18px;
+  border:var(--border-thick);border-radius:12px;font-family:var(--font-head);
+  font-size:.95rem;cursor:pointer;box-shadow:var(--shadow);transition:all .12s;
+}
+.action-btn:active{transform:translate(4px,4px);box-shadow:none;}
+.ab-download{background:var(--blue);}
+.ab-import  {background:var(--orange);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <span class="login-icon">🔐</span>
+    <h1>後台管理</h1>
+    <p>請輸入管理員密碼</p>
+    <input type="password" id="pwInput" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-login" onclick="doLogin()">登入 →</button>
+    <div class="login-err" id="loginErr">密碼錯誤，請重試</div>
+  </div>
+</div>
+
+<!-- ADMIN APP -->
+<div id="adminApp">
+  <header>
+    <span style="font-size:1.6em">⚙️</span>
+    <h1>後台管理系統</h1>
+    <a href="index.html" class="hdr-back">← 回前台</a>
+  </header>
+
+  <div class="admin-container">
+
+    <!-- NOTICE -->
+    <div class="notice">
+      <h3>📌 如何更新到網路上？</h3>
+      <p>
+        在此頁面編輯完成後，點「⬇️ 下載 data.json」，將下載的 <code>data.json</code> 上傳到你的 GitHub repository 根目錄，替換原本的檔案即可。GitHub Pages 會在幾分鐘內自動更新網站。
+      </p>
+    </div>
+
+    <!-- COUNTRIES & PLACES -->
+    <div class="section">
+      <div class="section-title">
+        🌍 國家與景點管理
+        <button class="action-btn" style="background:var(--pink);margin-left:auto;font-size:.8rem;" onclick="openAddCountry()">+ 新增國家</button>
+      </div>
+      <div class="country-list" id="countryList"></div>
+    </div>
+
+    <!-- JSON EDITOR -->
+    <div class="section">
+      <div class="section-title">📄 JSON 原始資料編輯 <span class="badge">進階</span></div>
+      <p style="font-size:.78rem;color:#777;font-weight:700;margin-bottom:10px;">直接編輯 JSON，完成後點「套用」更新。</p>
+      <textarea class="json-area" id="jsonEditor" spellcheck="false"></textarea>
+      <div class="json-actions">
+        <button class="action-btn ab-import" onclick="applyJson()">✅ 套用 JSON</button>
+        <button class="action-btn ab-download" onclick="downloadJson()">⬇️ 下載 data.json</button>
+        <button class="action-btn" style="background:var(--white);" onclick="refreshJsonEditor()">🔄 重置顯示</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PLACE MODAL -->
+<div class="modal-overlay hidden" id="placeModal">
+  <div class="modal-box">
+    <div class="modal-title" id="placeModalTitle">新增景點</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>景點名稱 *</label>
+        <input type="text" id="f_name" placeholder="例：金閣寺">
+      </div>
+      <div class="form-group">
+        <label>表情符號圖示 *</label>
+        <input type="text" id="f_icon" placeholder="例：🏯">
+      </div>
+      <div class="form-group">
+        <label>類型 *</label>
+        <select id="f_type">
+          <option value="sight">🏛️ 景點</option>
+          <option value="restaurant">🍽️ 餐廳</option>
+          <option value="nature">🌿 自然</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>建議停留時間（分鐘）</label>
+        <input type="number" id="f_duration" placeholder="例：90" min="10" step="10">
+      </div>
+      <div class="form-group">
+        <label>緯度 * <small>（Google Maps 右鍵可查）</small></label>
+        <input type="number" id="f_lat" placeholder="例：35.0394" step="0.0001">
+      </div>
+      <div class="form-group">
+        <label>經度 *</label>
+        <input type="number" id="f_lng" placeholder="例：135.7292" step="0.0001">
+      </div>
+      <div class="form-group full">
+        <label>📍 快速取得座標</label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="action-btn" style="background:var(--green);font-size:.75rem;padding:6px 12px;" onclick="useMyLocation()">📡 使用我的位置</button>
+          <a href="https://maps.google.com" target="_blank" class="action-btn" style="background:var(--blue);font-size:.75rem;padding:6px 12px;text-decoration:none;">🗺️ 開啟 Google Maps</a>
+        </div>
+        <p style="font-size:.68rem;color:#999;margin-top:5px;font-weight:700;">在 Google Maps 上，對目標地點點右鍵，第一行即是「緯度, 經度」，點一下可複製。</p>
+      </div>
+      <div class="form-group full">
+        <label>小提示（顯示在卡片上）</label>
+        <input type="text" id="f_tips" placeholder="例：門票 ¥500">
+      </div>
+      <div class="form-group full">
+        <label>景點介紹 *</label>
+        <textarea id="f_desc" placeholder="詳細介紹這個地方..."></textarea>
+      </div>
+      <div class="form-group full">
+        <label>部落格文章連結</label>
+        <input type="url" id="f_article" placeholder="https://...">
+      </div>
+    </div>
+    <p style="font-size:.72rem;color:#aaa;font-weight:700;margin-top:8px;">
+      💡 導航連結會自動由緯度/經度產生，無需手動填寫。
+    </p>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="savePlaceModal()">💾 儲存</button>
+      <button class="btn-cancel" onclick="closePlaceModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- COUNTRY MODAL -->
+<div class="modal-overlay hidden" id="countryModal">
+  <div class="modal-box">
+    <div class="modal-title" id="countryModalTitle">新增國家</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>國家名稱 *</label>
+        <input type="text" id="cf_name" placeholder="例：日本">
+      </div>
+      <div class="form-group">
+        <label>國旗 emoji *</label>
+        <input type="text" id="cf_flag" placeholder="例：🇯🇵">
+      </div>
+      <div class="form-group full">
+        <label>旅行描述</label>
+        <input type="text" id="cf_desc" placeholder="例：2023 秋 · 京都大阪 9 天 8 夜">
+      </div>
+      <div class="form-group">
+        <label>主題色 *</label>
+        <input type="color" id="cf_color" value="#FF6B9D">
+      </div>
+      <div class="form-group">
+        <label>地圖ID（英文/數字）*</label>
+        <input type="text" id="cf_id" placeholder="例：japan">
+      </div>
+      <div class="form-group">
+        <label>地圖中心緯度 *</label>
+        <input type="number" id="cf_lat" placeholder="例：35.011" step="0.001">
+      </div>
+      <div class="form-group">
+        <label>地圖中心經度 *</label>
+        <input type="number" id="cf_lng" placeholder="例：135.768" step="0.001">
+      </div>
+      <div class="form-group">
+        <label>預設縮放層級（1-18）</label>
+        <input type="number" id="cf_zoom" value="12" min="1" max="18">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="saveCountryModal()">💾 儲存</button>
+      <button class="btn-cancel" onclick="closeCountryModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Data ──
+let adminData = null;
+let editContext = null; // { type: 'place'|'country', countryId, placeId }
+
+// ── Login ──
+async function doLogin() {
+  // Load data first
+  try {
+    const res = await fetch('data.json?v=' + Date.now());
+    adminData = await res.json();
+  } catch(e) {
+    adminData = { site: { title:'旅行漫遊地圖', subtitle:'My Comic Travel Map', adminPassword:'travel2024' }, countries: [] };
+  }
+  const pw = document.getElementById('pwInput').value;
+  if (pw === adminData.site.adminPassword) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    renderAdmin();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('pwInput').value = '';
+  }
+}
+
+// ── Render ──
+function renderAdmin() {
+  renderCountries();
+  refreshJsonEditor();
+}
+
+function renderCountries() {
+  const list = document.getElementById('countryList');
+  list.innerHTML = '';
+  adminData.countries.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'country-item';
+    item.style.borderLeft = '6px solid ' + c.color;
+    item.innerHTML = `
+      <div class="country-header" onclick="toggleCountryOpen('${c.id}')">
+        <span class="c-flag">${c.flag}</span>
+        <span class="c-name">${c.name}</span>
+        <span class="c-count">${c.places.length} 個地點</span>
+        <div class="c-actions">
+          <button class="icon-btn edit" onclick="event.stopPropagation();openEditCountry('${c.id}')" title="編輯國家">✏️</button>
+          <button class="icon-btn del"  onclick="event.stopPropagation();deleteCountry('${c.id}')" title="刪除國家">🗑️</button>
+        </div>
+      </div>
+      <div class="country-places" id="cp-${c.id}">
+        <div class="places-grid">
+          ${c.places.map(pl => `
+            <div class="place-row">
+              <span class="pr-icon">${pl.icon}</span>
+              <div class="pr-info">
+                <div class="pr-name">${pl.name}</div>
+                <span class="pr-type ${pl.type}">${pl.type==='sight'?'景點':pl.type==='restaurant'?'餐廳':'自然'}</span>
+              </div>
+              <div class="pr-actions">
+                <button class="icon-btn edit" onclick="openEditPlace('${c.id}','${pl.id}')" title="編輯">✏️</button>
+                <button class="icon-btn del"  onclick="deletePlace('${c.id}','${pl.id}')" title="刪除">🗑️</button>
+              </div>
+            </div>`).join('')}
+        </div>
+        <button class="add-place-btn" onclick="openAddPlace('${c.id}')">➕ 新增景點到「${c.name}」</button>
+      </div>`;
+    list.appendChild(item);
+  });
+}
+
+function toggleCountryOpen(id) {
+  const el = document.getElementById('cp-' + id);
+  el.classList.toggle('open');
+}
+
+// ── Country Modal ──
+function openAddCountry() {
+  editContext = { type: 'country', countryId: null };
+  document.getElementById('countryModalTitle').textContent = '新增國家';
+  document.getElementById('cf_name').value = '';
+  document.getElementById('cf_flag').value = '';
+  document.getElementById('cf_desc').value = '';
+  document.getElementById('cf_color').value = '#FF6B9D';
+  document.getElementById('cf_id').value = '';
+  document.getElementById('cf_lat').value = '';
+  document.getElementById('cf_lng').value = '';
+  document.getElementById('cf_zoom').value = '12';
+  document.getElementById('countryModal').classList.remove('hidden');
+}
+
+function openEditCountry(id) {
+  const c = adminData.countries.find(x => x.id === id);
+  if (!c) return;
+  editContext = { type: 'country', countryId: id };
+  document.getElementById('countryModalTitle').textContent = '編輯國家：' + c.name;
+  document.getElementById('cf_name').value  = c.name;
+  document.getElementById('cf_flag').value  = c.flag;
+  document.getElementById('cf_desc').value  = c.desc;
+  document.getElementById('cf_color').value = c.color;
+  document.getElementById('cf_id').value    = c.id;
+  document.getElementById('cf_lat').value   = c.center[0];
+  document.getElementById('cf_lng').value   = c.center[1];
+  document.getElementById('cf_zoom').value  = c.zoom;
+  document.getElementById('countryModal').classList.remove('hidden');
+}
+
+function closeCountryModal() { document.getElementById('countryModal').classList.add('hidden'); }
+
+function saveCountryModal() {
+  const name  = document.getElementById('cf_name').value.trim();
+  const flag  = document.getElementById('cf_flag').value.trim();
+  const id    = document.getElementById('cf_id').value.trim().toLowerCase().replace(/\s+/g,'_');
+  const lat   = parseFloat(document.getElementById('cf_lat').value);
+  const lng   = parseFloat(document.getElementById('cf_lng').value);
+  const zoom  = parseInt(document.getElementById('cf_zoom').value) || 12;
+  if (!name||!flag||!id||isNaN(lat)||isNaN(lng)) { toast('⚠️ 請填寫所有必填欄位'); return; }
+
+  if (editContext.countryId) {
+    const c = adminData.countries.find(x => x.id === editContext.countryId);
+    Object.assign(c, { name, flag, desc: document.getElementById('cf_desc').value, color: document.getElementById('cf_color').value, center:[lat,lng], zoom });
+  } else {
+    if (adminData.countries.find(x => x.id === id)) { toast('⚠️ 該 ID 已存在'); return; }
+    adminData.countries.push({ id, name, flag, desc: document.getElementById('cf_desc').value, color: document.getElementById('cf_color').value, center:[lat,lng], zoom, places:[] });
+  }
+  closeCountryModal();
+  renderAdmin();
+  toast('✅ 國家已儲存！');
+}
+
+function deleteCountry(id) {
+  const c = adminData.countries.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm(`確定要刪除「${c.name}」及其所有景點嗎？`)) return;
+  adminData.countries = adminData.countries.filter(x => x.id !== id);
+  renderAdmin();
+  toast('🗑️ 已刪除');
+}
+
+// ── Place Modal ──
+function openAddPlace(countryId) {
+  editContext = { type: 'place', countryId, placeId: null };
+  document.getElementById('placeModalTitle').textContent = '新增景點';
+  ['f_name','f_icon','f_tips','f_desc','f_article','f_lat','f_lng','f_duration'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f_type').value = 'sight';
+  document.getElementById('placeModal').classList.remove('hidden');
+}
+
+function openEditPlace(countryId, placeId) {
+  const c  = adminData.countries.find(x => x.id === countryId);
+  const pl = c?.places.find(x => x.id === placeId);
+  if (!pl) return;
+  editContext = { type: 'place', countryId, placeId };
+  document.getElementById('placeModalTitle').textContent = '編輯：' + pl.name;
+  document.getElementById('f_name').value     = pl.name;
+  document.getElementById('f_icon').value     = pl.icon;
+  document.getElementById('f_type').value     = pl.type;
+  document.getElementById('f_lat').value      = pl.lat;
+  document.getElementById('f_lng').value      = pl.lng;
+  document.getElementById('f_tips').value     = pl.tips || '';
+  document.getElementById('f_desc').value     = pl.desc;
+  document.getElementById('f_article').value  = pl.article || '';
+  document.getElementById('f_duration').value = pl.duration || 60;
+  document.getElementById('placeModal').classList.remove('hidden');
+}
+
+function closePlaceModal() { document.getElementById('placeModal').classList.add('hidden'); }
+
+function savePlaceModal() {
+  const name    = document.getElementById('f_name').value.trim();
+  const icon    = document.getElementById('f_icon').value.trim();
+  const type    = document.getElementById('f_type').value;
+  const lat     = parseFloat(document.getElementById('f_lat').value);
+  const lng     = parseFloat(document.getElementById('f_lng').value);
+  const tips    = document.getElementById('f_tips').value.trim();
+  const desc    = document.getElementById('f_desc').value.trim();
+  const article = document.getElementById('f_article').value.trim();
+  const dur     = parseInt(document.getElementById('f_duration').value) || 60;
+  if (!name||!icon||!desc||isNaN(lat)||isNaN(lng)) { toast('⚠️ 請填寫所有必填欄位'); return; }
+
+  const c = adminData.countries.find(x => x.id === editContext.countryId);
+  if (!c) return;
+
+  const placeData = {
+    name, icon, type, lat, lng, tips, desc, article,
+    duration: dur,
+    nav: `https://maps.google.com/?q=${lat},${lng}`
+  };
+
+  if (editContext.placeId) {
+    const idx = c.places.findIndex(x => x.id === editContext.placeId);
+    c.places[idx] = { ...c.places[idx], ...placeData };
+  } else {
+    placeData.id = 'p_' + Date.now();
+    c.places.push(placeData);
+  }
+  closePlaceModal();
+  renderAdmin();
+  toast('✅ 景點已儲存！');
+}
+
+function deletePlace(countryId, placeId) {
+  const c = adminData.countries.find(x => x.id === countryId);
+  if (!c) return;
+  const pl = c.places.find(x => x.id === placeId);
+  if (!confirm(`確定要刪除「${pl.name}」？`)) return;
+  c.places = c.places.filter(x => x.id !== placeId);
+  renderAdmin();
+  toast('🗑️ 已刪除景點');
+}
+
+// ── JSON Editor ──
+function refreshJsonEditor() {
+  document.getElementById('jsonEditor').value = JSON.stringify(adminData, null, 2);
+}
+
+function applyJson() {
+  try {
+    adminData = JSON.parse(document.getElementById('jsonEditor').value);
+    renderAdmin();
+    toast('✅ JSON 已套用！');
+  } catch(e) {
+    toast('❌ JSON 格式錯誤：' + e.message);
+  }
+}
+
+function downloadJson() {
+  refreshJsonEditor();
+  const blob = new Blob([JSON.stringify(adminData, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'data.json';
+  a.click();
+  toast('⬇️ data.json 已下載！');
+}
+
+function useMyLocation() {
+  if (!navigator.geolocation) { toast('⚠️ 你的瀏覽器不支援定位'); return; }
+  toast('📡 取得位置中...');
+  navigator.geolocation.getCurrentPosition(pos => {
+    document.getElementById('f_lat').value = pos.coords.latitude.toFixed(6);
+    document.getElementById('f_lng').value = pos.coords.longitude.toFixed(6);
+    toast('✅ 已填入目前位置！');
+  }, () => toast('⚠️ 無法取得位置，請手動填入'));
+}
+
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>

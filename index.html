@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅行漫遊地圖</title>
+<meta name="description" content="記錄旅行足跡，打造你的專屬行程">
+<meta property="og:title" content="旅行漫遊地圖">
+<meta property="og:description" content="探索景點、規劃行程，開始你的旅行冒險">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Noto+Sans+TC:wght@700;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header id="mainHeader">
+    <div class="header-logo">✈️</div>
+    <div class="header-text">
+      <h1 id="siteTitle">旅行漫遊地圖</h1>
+      <p id="siteSubtitle">My Comic Travel Map</p>
+    </div>
+    <div class="header-actions">
+      <button class="hdr-btn" id="plannerToggleBtn" onclick="togglePlanner()">
+        🗓️ 行程規劃 <span class="planner-count" id="plannerCount" style="display:none">0</span>
+      </button>
+      <a href="admin.html" class="hdr-btn hdr-admin">⚙️ 後台</a>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs-wrapper" id="tabsWrap"></div>
+
+  <!-- MAIN -->
+  <main id="mainArea">
+
+    <!-- MAP -->
+    <div id="mapWrap">
+      <div id="map"></div>
+      <div class="onboard-tip" id="onboardTip">👆 點圖釘查看景點，或拖曳到行程清單！</div>
+    </div>
+
+    <!-- SIDEBAR: Place List -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <div class="sidebar-country-title">
+          <span class="big-flag" id="sflag">🗺️</span>
+          <span id="stitle">選擇國家</span>
+        </div>
+        <div class="sidebar-desc" id="sdesc">從上方頁籤選擇你想探索的國家</div>
+        <div class="filter-bar" id="filterBar"></div>
+      </div>
+      <div class="place-list" id="placeList"></div>
+    </aside>
+
+    <!-- PLANNER PANEL -->
+    <div class="planner-panel" id="plannerPanel">
+      <div class="planner-head">
+        <span>🗓️ 行程規劃</span>
+        <div class="planner-head-actions">
+          <button class="pl-btn pl-btn-sm" onclick="addDay()">+ 加天</button>
+          <button class="pl-btn pl-btn-sm pl-btn-sort-all" onclick="autoSortAll()" title="所有天依距離優化">🗺️ 全部排序</button>
+          <button class="pl-btn pl-btn-sm pl-btn-danger" onclick="clearPlanner()">🗑️</button>
+          <button class="pl-btn pl-btn-close" onclick="togglePlanner()">✕</button>
+        </div>
+      </div>
+      <div class="planner-summary" id="plannerSummary"></div>
+      <div class="planner-days" id="plannerDays"></div>
+      <div class="planner-footer">
+        <button class="pl-btn pl-btn-share" onclick="sharePlan()">🔗 分享行程</button>
+        <button class="pl-btn pl-btn-export" onclick="exportPlan()">📋 複製文字</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- SHARE MODAL -->
+<div class="modal-overlay" id="shareModal" onclick="closeShareModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">🔗 分享你的行程</div>
+    <div class="modal-desc">將以下連結分享給朋友，他們可以直接查看你規劃的行程！</div>
+    <div class="share-url-wrap">
+      <input type="text" id="shareUrl" readonly>
+      <button class="pl-btn" onclick="copyShareUrl()">複製</button>
+    </div>
+    <button class="pl-btn pl-btn-close-modal" onclick="closeShareModal()">關閉</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- Speed lines -->
+<div class="speed-lines" id="speedLines">
+  <div class="speed-line" style="top:20%;transform:rotate(-8deg)"></div>
+  <div class="speed-line" style="top:40%;transform:rotate(-3deg)"></div>
+  <div class="speed-line" style="top:60%;transform:rotate(3deg)"></div>
+  <div class="speed-line" style="top:80%;transform:rotate(8deg)"></div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/map.js"></script>
+<script src="js/planner.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
