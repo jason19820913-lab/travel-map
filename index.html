@@ -324,10 +324,7 @@ main{
       <div class="h-sub" id="siteSub">My Comic Travel Map</div>
     </div>
     <div class="h-actions">
-      <button class="hbtn" onclick="togglePlanner()">
-        🗓️ 行程規劃
-        <span class="badge" id="planBadge" style="display:none">0</span>
-      </button>
+
     </div>
   </header>
 
@@ -352,61 +349,8 @@ main{
       <div class="place-list" id="placeList"></div>
     </aside>
 
-    <!-- DRAG HANDLE 2 (sidebar ↔ planner, shown only when planner open) -->
-    <div class="drag-handle" id="dh2" title="拖曳調整"></div>
 
-    <!-- PLANNER PANEL — flex sibling, NOT absolute -->
-    <div id="planner">
-      <div class="pl-head">
-        <span class="pl-title">🗓️ 行程規劃</span>
-        <div class="pl-acts">
-          <button class="plbtn plbtn-sort" onclick="autoSortAll()" title="依距離排序所有天">🗺️ 排序</button>
-          <button class="plbtn" onclick="addDay()">＋天</button>
-          <button class="plbtn plbtn-del" onclick="clearCurrentPlan()">🗑️</button>
-          <button class="plbtn plbtn-close" onclick="togglePlanner()">✕</button>
-        </div>
-      </div>
-      <!-- Multi-plan tabs -->
-      <div class="plan-tabs" id="planTabs"></div>
-      <!-- Summary -->
-      <div class="pl-sum" id="planSum"></div>
-      <!-- Day blocks -->
-      <div class="pl-days" id="planDays"></div>
-      <!-- Footer -->
-      <div class="pl-foot">
-        <button class="plbtn plbtn-share"  onclick="sharePlan()">🔗 分享行程</button>
-        <button class="plbtn plbtn-export" onclick="exportPlan()">📋 複製文字</button>
-      </div>
-    </div>
   </main>
-</div>
-
-<!-- Mobile planner backdrop -->
-<div class="pl-backdrop" id="plBackdrop" onclick="togglePlanner()"></div>
-
-<!-- Share modal -->
-<div class="modal-ov hidden" id="shareModal" onclick="closeShare()">
-  <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-ttl">🔗 分享行程</div>
-    <div class="modal-desc">把這個連結傳給朋友，他們可以直接看到你規劃的行程！</div>
-    <div class="share-row">
-      <input type="text" id="shareUrl" readonly>
-      <button class="plbtn" onclick="copyShareUrl()">複製</button>
-    </div>
-    <button class="modal-close" onclick="closeShare()">關閉</button>
-  </div>
-</div>
-
-<!-- Rename plan modal -->
-<div class="modal-ov hidden" id="renameModal" onclick="closeRename()">
-  <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-ttl">✏️ 重新命名行程</div>
-    <input class="rename-input" type="text" id="renameInput" maxlength="20" placeholder="輸入行程名稱" onkeydown="if(event.key==='Enter')saveRename()">
-    <div class="rename-btns">
-      <button class="rbtn rbtn-ok"     onclick="saveRename()">確定</button>
-      <button class="rbtn rbtn-cancel" onclick="closeRename()">取消</button>
-    </div>
-  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -419,59 +363,33 @@ main{
 <script src="js/data.js"></script>
 <script src="js/map.js"></script>
 <script>
-// ════════════════════════════════════════════════════════════════
-// TRAVEL MAP — Main Script (inline, self-contained)
-// ════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// TRAVEL MAP — Main Script (no planner)
+// ═══════════════════════════════════════════════════
 
 const TYPE = {
-  sight:      {label:'景點',color:'#4FC3F7',emoji:'🏛️'},
-  restaurant: {label:'餐廳',color:'#FF9A3C',emoji:'🍽️'},
-  nature:     {label:'自然',color:'#69D84F',emoji:'🌿'}
+  sight:      {label:'景點', color:'#4FC3F7', emoji:'🏛️'},
+  restaurant: {label:'餐廳', color:'#FF9A3C', emoji:'🍽️'},
+  nature:     {label:'自然', color:'#69D84F', emoji:'🌿'}
 };
 
-// ── App State ──
-let currentCountry  = null;
-let activeFilters   = new Set(['sight','restaurant','nature']);
-let plannerOpen     = false;
+let currentCountry = null;
+let activeFilters  = new Set(['sight','restaurant','nature']);
 
-// ── Multi-Plan State ──
-// plans = [ { id, name, days: [ {id, label, items:[]} ] } ]
-let plans       = [ newPlan(1) ];
-let currentPlanIdx = 0;
-let dayCounter  = 1;
-let renamingPlanIdx = null;
-let dragId = null, dragDayId = null;
-
-function newPlan(n) {
-  return { id:'plan_'+Date.now()+'_'+n, name:'行程 '+n, days:[{id:'d1',label:'第 1 天',items:[]}] };
-}
-function currentPlan() { return plans[currentPlanIdx]; }
-function currentDays() { return currentPlan().days; }
-
-// ════════════════════════════════════════════════════════════════
-// BOOT
-// ════════════════════════════════════════════════════════════════
+// ── Boot ──
 document.addEventListener('DOMContentLoaded', async () => {
   await loadData();
   const s = TRAVEL_DATA.site;
   document.title = s.title;
   document.getElementById('siteTitle').textContent = s.title;
   document.getElementById('siteSub').textContent   = s.subtitle;
-
   initMap();
   buildTabs();
   if (TRAVEL_DATA.countries.length) selectCountry(TRAVEL_DATA.countries[0]);
-
-  loadPlanFromUrl(); // shared plan via ?plan=
-  renderPlanTabs();
-  renderPlanner();
-
   initDragResize();
 });
 
-// ════════════════════════════════════════════════════════════════
-// TABS & COUNTRY
-// ════════════════════════════════════════════════════════════════
+// ── Tabs ──
 function buildTabs() {
   const bar = document.getElementById('tabsBar');
   bar.innerHTML = '';
@@ -494,14 +412,11 @@ function selectCountry(c) {
   renderSidebar(c);
 }
 
-// ════════════════════════════════════════════════════════════════
-// SIDEBAR
-// ════════════════════════════════════════════════════════════════
+// ── Sidebar ──
 function renderSidebar(c) {
-  document.getElementById('sflag').textContent = c.flag;
+  document.getElementById('sflag').textContent  = c.flag;
   document.getElementById('stitle').textContent = c.name;
   document.getElementById('sdesc').textContent  = c.desc;
-
   const row = document.getElementById('filterRow');
   row.innerHTML = '';
   [...new Set(c.places.map(p=>p.type))].forEach(type => {
@@ -514,10 +429,10 @@ function renderSidebar(c) {
       if (activeFilters.has(type)) {
         if (activeFilters.size === 1) return;
         activeFilters.delete(type);
-        chip.classList.remove(`on-${type}`); chip.style.opacity='.4';
+        chip.classList.remove(`on-${type}`); chip.style.opacity = '.4';
       } else {
         activeFilters.add(type);
-        chip.classList.add(`on-${type}`); chip.style.opacity='1';
+        chip.classList.add(`on-${type}`); chip.style.opacity = '1';
       }
       renderCards(c); showMarkersOfTypes(c, activeFilters);
     };
@@ -531,8 +446,7 @@ function renderCards(c) {
   list.innerHTML = '';
   c.places.filter(p => activeFilters.has(p.type)).forEach(pl => {
     const t   = TYPE[pl.type];
-    const dur = fmtDur(pl.duration||60);
-    const added = isInAnyPlan(pl.id);
+    const dur = pl.duration ? (pl.duration>=60 ? Math.floor(pl.duration/60)+'h'+(pl.duration%60?pl.duration%60+'m':'') : pl.duration+'min') : '';
     const card = document.createElement('div');
     card.className = `pcard ${pl.type}`;
     card.id = `card-${pl.id}`;
@@ -542,22 +456,15 @@ function renderCards(c) {
         <div class="pcard-info">
           <div class="pcard-name">${pl.name}</div>
           <span class="pcard-tag">${t.emoji} ${t.label}</span>
-          ${pl.tips?`<div class="pcard-meta">💡 ${pl.tips}${pl.duration?' · ⏱ '+dur:''}</div>`:''}
+          ${pl.tips ? `<div class="pcard-meta">💡 ${pl.tips}${dur?' · ⏱ '+dur:''}</div>` : ''}
         </div>
-        <div class="pcard-acts">
-          <button class="btn-add ${added?'on':''}" data-pid="${pl.id}"
-            title="${added?'已加入行程':'加入行程'}"
-            onclick="event.stopPropagation();quickAdd('${pl.id}')"
-          >${added?'✅':'➕'}</button>
-          <span class="chev" id="chev-${pl.id}">▾</span>
-        </div>
+        <span class="chev" id="chev-${pl.id}">▾</span>
       </div>
       <div class="pcard-body" id="body-${pl.id}">
         <p class="pdesc">${pl.desc}</p>
         <div class="pbtns">
           <a class="abtn abtn-nav" href="${pl.nav}" target="_blank">🧭 導航</a>
-          <a class="abtn abtn-art" href="${pl.article||'#'}" target="_blank">📝 文章</a>
-          <button class="abtn abtn-plan" onclick="quickAdd('${pl.id}')">➕ 加行程</button>
+          ${pl.article ? `<a class="abtn abtn-art" href="${pl.article}" target="_blank">📝 文章</a>` : ''}
         </div>
       </div>`;
     list.appendChild(card);
@@ -569,17 +476,18 @@ function toggleCard(id, lat, lng) {
   const chev = document.getElementById(`chev-${id}`);
   const card = document.getElementById(`card-${id}`);
   const was  = body.classList.contains('open');
-  document.querySelectorAll('.pcard-body').forEach(b=>b.classList.remove('open'));
-  document.querySelectorAll('.chev').forEach(c=>c.classList.remove('open'));
-  document.querySelectorAll('.pcard').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.pcard-body').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.chev').forEach(c => c.classList.remove('open'));
+  document.querySelectorAll('.pcard').forEach(c => c.classList.remove('active'));
   if (!was) {
     body.classList.add('open'); chev.classList.add('open'); card.classList.add('active');
     panToPlace(lat, lng); openMarkerPopup(id);
   }
 }
-function scrollToCard(id) { document.getElementById(`card-${id}`)?.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+
+function scrollToCard(id)  { document.getElementById(`card-${id}`)?.scrollIntoView({behavior:'smooth',block:'nearest'}); }
 function focusCard(id) {
-  const pl = currentCountry?.places.find(p=>p.id===id); if(!pl) return;
+  const pl = currentCountry?.places.find(p => p.id === id); if (!pl) return;
   if (!activeFilters.has(pl.type)) {
     activeFilters.add(pl.type);
     document.querySelector(`.fchip[data-type="${pl.type}"]`)?.classList.add(`on-${pl.type}`);
@@ -588,320 +496,46 @@ function focusCard(id) {
   scrollToCard(id); toggleCard(id, pl.lat, pl.lng);
 }
 
-// ════════════════════════════════════════════════════════════════
-// PLANNER — OPEN/CLOSE
-// ════════════════════════════════════════════════════════════════
-function togglePlanner() {
-  plannerOpen = !plannerOpen;
-  document.getElementById('planner').classList.toggle('open', plannerOpen);
-  document.getElementById('dh2').classList.toggle('show', plannerOpen && window.innerWidth > 600);
-  document.getElementById('plBackdrop').classList.toggle('show', plannerOpen && window.innerWidth <= 600);
-  if (plannerOpen) renderPlanner();
-  setTimeout(() => map?.invalidateSize(), 350);
-}
-function openPlanner() {
-  if (!plannerOpen) { plannerOpen = true; document.getElementById('planner').classList.add('open'); document.getElementById('dh2').classList.toggle('show', window.innerWidth>600); setTimeout(()=>map?.invalidateSize(),350); }
-  renderPlanner();
-}
-
-// ════════════════════════════════════════════════════════════════
-// MULTI-PLAN MANAGEMENT
-// ════════════════════════════════════════════════════════════════
-function renderPlanTabs() {
-  const bar = document.getElementById('planTabs');
-  bar.innerHTML = '';
-  plans.forEach((p,i) => {
-    const tab = document.createElement('div');
-    tab.className = `ptab${i===currentPlanIdx?' active':''}`;
-    tab.textContent = p.name;
-    tab.title = '點擊切換；雙擊重新命名';
-    tab.onclick = () => { currentPlanIdx = i; dayCounter = currentDays().length; renderPlanTabs(); renderPlanner(); };
-    tab.ondblclick = (e) => { e.stopPropagation(); openRename(i); };
-    bar.appendChild(tab);
-  });
-  // add new plan button
-  const add = document.createElement('div');
-  add.className = 'ptab ptab-add'; add.textContent = '＋ 新行程';
-  add.onclick = () => {
-    plans.push(newPlan(plans.length+1));
-    currentPlanIdx = plans.length-1;
-    dayCounter = 1;
-    renderPlanTabs(); renderPlanner();
-    showToast('✅ 已建立新行程！');
-  };
-  bar.appendChild(add);
-}
-
-function openRename(idx) {
-  renamingPlanIdx = idx;
-  document.getElementById('renameInput').value = plans[idx].name;
-  document.getElementById('renameModal').classList.remove('hidden');
-  setTimeout(()=>document.getElementById('renameInput').focus(),50);
-}
-function saveRename() {
-  const v = document.getElementById('renameInput').value.trim();
-  if (v && renamingPlanIdx !== null) { plans[renamingPlanIdx].name = v; renderPlanTabs(); }
-  closeRename();
-}
-function closeRename() { document.getElementById('renameModal').classList.add('hidden'); renamingPlanIdx=null; }
-
-// ════════════════════════════════════════════════════════════════
-// DAY MANAGEMENT
-// ════════════════════════════════════════════════════════════════
-function addDay() {
-  dayCounter++;
-  currentDays().push({id:'d'+dayCounter, label:'第 '+dayCounter+' 天', items:[]});
-  renderPlanner(); updateBadge();
-}
-function removeDay(dayId) {
-  if (currentDays().length===1) { showToast('⚠️ 至少保留一天'); return; }
-  const day   = currentDays().find(d=>d.id===dayId);
-  const first = currentDays().find(d=>d.id!==dayId);
-  day.items.forEach(i=>{ if(!first.items.find(x=>x.id===i.id)) first.items.push(i); });
-  currentPlan().days = currentDays().filter(d=>d.id!==dayId);
-  renderPlanner(); updateBadge(); showToast('景點已移入其他天');
-}
-function clearCurrentPlan() {
-  currentPlan().days = [{id:'d1',label:'第 1 天',items:[]}];
-  dayCounter=1; renderPlanner(); updateBadge(); updateAddBtns();
-}
-
-// ════════════════════════════════════════════════════════════════
-// ADD / REMOVE PLACES FROM PLAN
-// ════════════════════════════════════════════════════════════════
-function isInAnyPlan(id) { return plans.some(p=>p.days.some(d=>d.items.some(i=>i.id===id))); }
-function isInCurrentPlan(id) { return currentDays().some(d=>d.items.some(i=>i.id===id)); }
-
-function quickAdd(placeId) {
-  if (isInCurrentPlan(placeId)) { showToast('✅ 已在目前行程中！'); return; }
-  const pl = findPlace(placeId); if(!pl) return;
-  currentDays()[0].items.push(makePlanItem(pl));
-  updateBadge(); updateAddBtns(); renderPlanner();
-  if (!plannerOpen) openPlanner();
-  showToast('📌 已加入 '+currentPlan().name+'！');
-}
-function removeFromPlan(id, dayId) {
-  const day = currentDays().find(d=>d.id===dayId); if(!day) return;
-  day.items = day.items.filter(i=>i.id!==id);
-  renderPlanner(); updateBadge(); updateAddBtns();
-}
-function makePlanItem(pl) {
-  return {id:pl.id, name:pl.name, icon:pl.icon, type:pl.type, duration:pl.duration||60, nav:pl.nav||'', lat:pl.lat, lng:pl.lng};
-}
-function updateBadge() {
-  const total = plans.reduce((s,p)=>s+p.days.reduce((ss,d)=>ss+d.items.length,0),0);
-  const el = document.getElementById('planBadge');
-  el.textContent=total; el.style.display=total?'':'none';
-}
-function updateAddBtns() {
-  document.querySelectorAll('.btn-add[data-pid]').forEach(b=>{
-    const added = isInAnyPlan(b.dataset.pid);
-    b.classList.toggle('on',added); b.title=added?'已加入行程':'加入行程'; b.textContent=added?'✅':'➕';
-  });
-}
-
-// ════════════════════════════════════════════════════════════════
-// RENDER PLANNER
-// ════════════════════════════════════════════════════════════════
-function renderPlanner() {
-  renderPlanTabs();
-  const days = currentDays();
-  const total = days.reduce((s,d)=>s+d.items.length,0);
-  const mins  = days.reduce((s,d)=>s+d.items.reduce((ss,i)=>ss+(i.duration||60),0),0);
-  const km    = days.reduce((s,d)=>s+(d.items.length>=2?calcRouteKm(d.items):0),0);
-  document.getElementById('planSum').innerHTML =
-    `<span>📅 ${days.length}天</span><span>📍 ${total}站</span><span>⏱ ${fmtDur(mins)}</span>${km?`<span>🛣 ~${km}km</span>`:''}`;
-
-  const container = document.getElementById('planDays');
-  container.innerHTML='';
-
-  if(total===0 && days.length===1){
-    container.innerHTML=`<div class="empty-plan"><div class="big">🗺️</div><div>還沒有任何行程</div><div style="font-size:.68rem;color:#bbb;margin-top:5px">點景點的 ➕，或從地圖彈窗加入</div></div>`;
-    return;
-  }
-
-  const dayBgs=['#FFE94E','#FFD0E8','#C8F0FF','#D0FFD8','#E8DAFF','#FFE0C0'];
-  days.forEach((day,di)=>{
-    const dm   = day.items.reduce((s,i)=>s+(i.duration||60),0);
-    const dkm  = day.items.length>=2?calcRouteKm(day.items):0;
-    const wrap = document.createElement('div');
-    wrap.className='day-block';
-    wrap.innerHTML=`
-      <div class="day-lbl" style="background:${dayBgs[di%dayBgs.length]}">
-        <div class="day-lbl-l">
-          <span>📅</span>
-          <span class="day-edit" contenteditable="true"
-            onblur="renameDay('${day.id}',this.textContent)"
-            onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
-          >${day.label}</span>
-          <span class="day-meta">${day.items.length}站·${fmtDur(dm)}${dkm?'·~'+dkm+'km':''}</span>
-        </div>
-        <div class="day-lbl-r">
-          <button class="day-sort" onclick="sortDay('${day.id}')">🗺️ 排序</button>
-          <button class="day-rm"   onclick="removeDay('${day.id}')">✕</button>
-        </div>
-      </div>
-      <div class="drop-zone" id="dz-${day.id}" data-day="${day.id}">
-        ${day.items.length===0?'<div class="dz-hint">拖曳景點到這裡 或 點 ➕</div>':''}
-        ${day.items.map((item,ii)=>renderPI(item,day.id,ii)).join('')}
-      </div>`;
-    container.appendChild(wrap);
-    initDropZone(document.getElementById(`dz-${day.id}`));
-  });
-
-  // re-attach drag events
-  container.querySelectorAll('.pi[draggable]').forEach(el=>{
-    el.addEventListener('dragstart', onDragStart);
-    el.addEventListener('dragend',   onDragEnd);
-  });
-}
-
-function renderPI(item, dayId, idx) {
-  return `<div class="pi ${item.type}-i" draggable="true" data-id="${item.id}" data-day="${dayId}">
-    <span class="pi-drag">⠿</span>
-    <span class="pi-num">${idx+1}</span>
-    <span class="pi-ico">${item.icon}</span>
-    <div class="pi-inf"><div class="pi-name">${item.name}</div><div class="pi-dur">⏱ ${fmtDur(item.duration)}</div></div>
-    <a class="pi-nav" href="${item.nav}" target="_blank" onclick="event.stopPropagation()">🧭</a>
-    <button class="pi-rm" onclick="removeFromPlan('${item.id}','${dayId}')">✕</button>
-  </div>`;
-}
-
-function renameDay(dayId, text) {
-  const day = currentDays().find(d=>d.id===dayId);
-  if(day&&text.trim()) day.label=text.trim();
-}
-
-// ════════════════════════════════════════════════════════════════
-// DISTANCE SORT (Haversine + Nearest-Neighbour)
-// ════════════════════════════════════════════════════════════════
-function hav(a,b,c,d){const R=6371,dL=(c-a)*Math.PI/180,dG=(d-b)*Math.PI/180,x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dG/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
-function nnSort(items){if(items.length<=2)return[...items];const u=[...items],r=[u.shift()];while(u.length){const last=r[r.length-1];let bi=0,bd=Infinity;u.forEach((x,i)=>{const d=hav(last.lat,last.lng,x.lat,x.lng);if(d<bd){bd=d;bi=i;}});r.push(u.splice(bi,1)[0]);}return r;}
-function calcRouteKm(items){let t=0;for(let i=0;i<items.length-1;i++)t+=hav(items[i].lat,items[i].lng,items[i+1].lat,items[i+1].lng);return Math.round(t);}
-function sortDay(dayId){const d=currentDays().find(x=>x.id===dayId);if(!d||d.items.length<2){showToast('⚠️ 至少需要2個地點');return;}d.items=nnSort(d.items);renderPlanner();drawRoute(d);showToast('🗺️ 已依距離優化！');}
-function autoSortAll(){currentDays().forEach(d=>{if(d.items.length>=2)d.items=nnSort(d.items);});renderPlanner();showToast('🗺️ 全部天數已優化！');}
-
-function drawRoute(day) {
-  if(!map) return;
-  if(window._rl) window._rl.forEach(l=>{try{map.removeLayer(l);}catch(e){}});
-  window._rl=[];
-  if(day.items.length<2) return;
-  const coords=day.items.map(i=>[i.lat,i.lng]);
-  const colors=['#FF6B9D','#4FC3F7','#69D84F','#FF9A3C','#B57BFF'];
-  const line=L.polyline(coords,{color:colors[currentDays().indexOf(day)%5],weight:4,opacity:.8,dashArray:'8,5'}).addTo(map);
-  window._rl=[line];
-  map.fitBounds(line.getBounds(),{padding:[50,50]});
-}
-
-// ════════════════════════════════════════════════════════════════
-// DRAG & DROP
-// ════════════════════════════════════════════════════════════════
-function onDragStart(e){dragId=e.currentTarget.dataset.id;dragDayId=e.currentTarget.dataset.day;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
-function onDragEnd(e){e.currentTarget.classList.remove('dragging');document.querySelectorAll('.drop-zone').forEach(z=>z.classList.remove('over'));}
-function initDropZone(el){
-  el.addEventListener('dragover',e=>{e.preventDefault();document.querySelectorAll('.drop-zone').forEach(z=>z.classList.remove('over'));el.classList.add('over');});
-  el.addEventListener('dragleave',e=>{if(!el.contains(e.relatedTarget))el.classList.remove('over');});
-  el.addEventListener('drop',e=>{
-    e.preventDefault();el.classList.remove('over');if(!dragId) return;
-    const tDayId=el.dataset.day;
-    if(dragDayId===tDayId){
-      const day=currentDays().find(d=>d.id===tDayId);
-      const after=getAfterEl(el,e.clientY);
-      const item=day.items.find(i=>i.id===dragId);
-      day.items=day.items.filter(i=>i.id!==dragId);
-      if(!after)day.items.push(item);
-      else{const idx=day.items.findIndex(i=>i.id===after.dataset.id);day.items.splice(Math.max(0,idx),0,item);}
-    }else{
-      const src=currentDays().find(d=>d.id===dragDayId);
-      const tgt=currentDays().find(d=>d.id===tDayId);
-      if(!src||!tgt)return;
-      if(tgt.items.find(i=>i.id===dragId)){showToast('已在那天了');return;}
-      const item=src.items.find(i=>i.id===dragId);
-      src.items=src.items.filter(i=>i.id!==dragId);
-      tgt.items.push(item);
-      showToast('↔️ 已移至'+tgt.label);
-    }
-    dragId=null;dragDayId=null;renderPlanner();updateBadge();
-  });
-}
-function getAfterEl(c,y){return[...c.querySelectorAll('.pi:not(.dragging)')].reduce((cl,el)=>{const b=el.getBoundingClientRect(),o=y-b.top-b.height/2;return(o<0&&o>cl.offset)?{offset:o,element:el}:cl;},{offset:-Infinity}).element;}
-
-// ════════════════════════════════════════════════════════════════
-// SHARE & EXPORT
-// ════════════════════════════════════════════════════════════════
-function sharePlan(){
-  const payload=currentDays().map(d=>({l:d.label,ids:d.items.map(i=>i.id)}));
-  const encoded=btoa(encodeURIComponent(JSON.stringify(payload)));
-  const url=location.href.split('?')[0]+'?plan='+encoded;
-  document.getElementById('shareUrl').value=url;
-  document.getElementById('shareModal').classList.remove('hidden');
-}
-function copyShareUrl(){navigator.clipboard.writeText(document.getElementById('shareUrl').value).then(()=>showToast('✅ 連結已複製！')).catch(()=>{document.getElementById('shareUrl').select();document.execCommand('copy');showToast('✅ 已複製！');});}
-function closeShare(){document.getElementById('shareModal').classList.add('hidden');}
-
-function loadPlanFromUrl(){
-  const raw=new URLSearchParams(location.search).get('plan');if(!raw)return;
-  try{
-    const data=JSON.parse(decodeURIComponent(atob(raw)));
-    const imported={id:'plan_shared',name:'分享的行程',days:[]};
-    data.forEach((d,i)=>{const items=d.ids.map(id=>{const pl=findPlace(id);return pl?makePlanItem(pl):null;}).filter(Boolean);imported.days.push({id:'d'+(i+1),label:d.l,items});});
-    plans.push(imported);currentPlanIdx=plans.length-1;
-    dayCounter=imported.days.length;
-    openPlanner();updateBadge();updateAddBtns();showToast('🗓️ 已載入分享行程！');
-  }catch(e){console.warn('Invalid plan URL',e);}
-}
-
-function exportPlan(){
-  let t='✈️ '+currentPlan().name+'\n'+'═'.repeat(24)+'\n\n';
-  currentDays().forEach(d=>{const m=d.items.reduce((s,i)=>s+(i.duration||60),0);t+=`【${d.label}】（約 ${fmtDur(m)}）\n`;d.items.forEach((x,i)=>{t+=`  ${i+1}. ${x.icon} ${x.name}（${fmtDur(x.duration)}）\n`;});if(d.items.length>=2)t+=`  🛣️ ~${calcRouteKm(d.items)}km\n`;t+='\n';});
-  t+='─'.repeat(24)+'\n✈️ 旅行漫遊地圖 '+location.href.split('?')[0];
-  navigator.clipboard.writeText(t).then(()=>showToast('📋 行程已複製！')).catch(()=>showToast('⚠️ 請手動複製'));
-}
-
-// ════════════════════════════════════════════════════════════════
-// DRAG-TO-RESIZE (desktop only)
-// ════════════════════════════════════════════════════════════════
+// ── Drag resize (desktop) ──
 function initDragResize() {
   if (window.innerWidth <= 600) return;
-  makeDragger('dh1', 'sidebar',  (w) => { document.getElementById('sidebar').style.width = w+'px'; });
-  makeDragger('dh2', 'planner',  (w) => { document.getElementById('planner').style.width = w+'px'; });
-}
-
-function makeDragger(handleId, targetId, applyW) {
-  const handle = document.getElementById(handleId);
-  const target = document.getElementById(targetId);
-  if(!handle||!target) return;
-  let dragging=false, startX=0, startW=0;
-
-  handle.addEventListener('mousedown', e=>{
-    dragging=true; startX=e.clientX; startW=target.offsetWidth;
+  const handle  = document.getElementById('dh1');
+  const sidebar = document.getElementById('sidebar');
+  if (!handle || !sidebar) return;
+  let dragging = false, startX = 0, startW = 0;
+  handle.addEventListener('mousedown', e => {
+    dragging = true; startX = e.clientX; startW = sidebar.offsetWidth;
     handle.classList.add('active');
-    document.body.style.cursor='col-resize'; document.body.style.userSelect='none';
+    document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
     e.preventDefault();
   });
-  document.addEventListener('mousemove', e=>{
-    if(!dragging) return;
-    // dh1: drag left = wider sidebar
-    // dh2: drag left = wider planner
-    const delta = (handleId==='dh1') ? (startX - e.clientX) : (startX - e.clientX);
-    const newW  = Math.min(Math.max(startW + delta, 180), window.innerWidth*0.52);
-    applyW(newW); map?.invalidateSize();
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const newW = Math.min(Math.max(startW + (startX - e.clientX), 180), window.innerWidth * 0.52);
+    sidebar.style.width = newW + 'px';
+    map?.invalidateSize();
   });
-  document.addEventListener('mouseup', ()=>{
-    if(!dragging) return;
-    dragging=false; handle.classList.remove('active');
-    document.body.style.cursor=''; document.body.style.userSelect='';
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false; handle.classList.remove('active');
+    document.body.style.cursor = ''; document.body.style.userSelect = '';
     map?.invalidateSize();
   });
 }
 
-// ════════════════════════════════════════════════════════════════
-// HELPERS
-// ════════════════════════════════════════════════════════════════
-function findPlace(id){if(!TRAVEL_DATA)return null;for(const c of TRAVEL_DATA.countries){const p=c.places.find(x=>x.id===id);if(p)return p;}return null;}
-function fmtDur(m){if(!m)return'60min';return m>=60?Math.floor(m/60)+'h'+(m%60?m%60+'m':''):m+'min';}
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('show'),2600);}
-function triggerSpeedLines(){const el=document.getElementById('speedLines');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),600);}
+// ── Speed lines ──
+function triggerSpeedLines() {
+  const el = document.getElementById('speedLines');
+  el.classList.remove('show'); void el.offsetWidth;
+  el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 600);
+}
+
+// ── Toast ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.classList.remove('show'), 2600);
+}
 </script>
 </body>
-</html>
