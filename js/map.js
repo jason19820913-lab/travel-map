@@ -9,16 +9,34 @@ const TYPE_CFG = {
 };
 
 function initMap() {
-  map = L.map('map', { zoomControl: true });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  map = L.map('map', { zoomControl: true, preferCanvas: true });
+
+  // Primary: OpenStreetMap (最穩定，全球可用)
+  const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19,
+    crossOrigin: true
+  });
+
+  // Fallback: CartoDB Voyager (更漂亮但偶爾被擋)
+  const carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
     subdomains: 'abcd',
-    maxZoom: 19
-  }).addTo(map);
+    maxZoom: 19,
+    crossOrigin: true
+  });
+
+  // 先嘗試 CartoDB，失敗自動換 OSM
+  carto.addTo(map);
+  carto.once('tileerror', () => {
+    map.removeLayer(carto);
+    osm.addTo(map);
+    console.warn('CartoDB failed, switched to OpenStreetMap');
+  });
 
   // Comic colour filter
   const s = document.createElement('style');
-  s.textContent = '.leaflet-tile-pane{filter:saturate(1.8) contrast(1.15) brightness(1.02) hue-rotate(8deg);}';
+  s.textContent = '.leaflet-tile-pane{filter:saturate(1.7) contrast(1.12) brightness(1.03);}';
   document.head.appendChild(s);
 
   map.setView([25, 110], 4);
@@ -29,7 +47,7 @@ function loadCountryMarkers(country) {
   country.places.forEach(pl => addMarker(pl));
 }
 
-// ── Diamond-pin marker (漫畫風菱形圖釘) ──
+// Diamond-pin marker
 function addMarker(pl) {
   const cfg  = TYPE_CFG[pl.type] || TYPE_CFG.sight;
   const html = `
@@ -53,12 +71,11 @@ function addMarker(pl) {
   });
   const m = L.marker([pl.lat, pl.lng], { icon }).addTo(map);
   m.placeId = pl.id;
-  m.bindPopup(buildPopup(pl, cfg), { minWidth:210, maxWidth:260 });
+  m.bindPopup(buildPopup(pl, cfg), { minWidth:210, maxWidth:270 });
   m.on('click', () => { scrollToCard(pl.id); openCard(pl.id); });
   markers.push(m);
 }
 
-// ── Popup: 詳情 / 導航 / 電話 ──
 function buildPopup(pl, cfg) {
   const navUrl  = `https://www.google.com/maps/dir/?api=1&destination=${pl.lat},${pl.lng}&travelmode=walking`;
   const telHtml = pl.phone
@@ -68,7 +85,7 @@ function buildPopup(pl, cfg) {
     <div class="pp-head" style="background:${cfg.color}">
       <span style="font-size:1.45em">${pl.icon}</span>
       <div>
-        <div style="font-family:var(--fh,'Fredoka One',sans-serif);font-size:.98rem;line-height:1.2">${pl.name}</div>
+        <div style="font-family:'Fredoka One','Noto Sans TC',sans-serif;font-size:.98rem;line-height:1.2">${pl.name}</div>
         <div style="font-size:.68rem;font-weight:800;opacity:.75">${cfg.emoji} ${cfg.label}${pl.tips ? ' · ' + pl.tips : ''}</div>
       </div>
     </div>
