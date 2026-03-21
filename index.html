@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>旅行漫遊地圖</title>
+<title>土豪哥的旅行漫遊地圖</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Noto+Sans+TC:wght@700;900&family=Fredoka+One&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -342,8 +342,8 @@ main{
   <header>
     <div class="h-logo">✈️</div>
     <div>
-      <div class="h-title" id="siteTitle">旅行漫遊地圖</div>
-      <div class="h-sub" id="siteSub">My Comic Travel Map</div>
+      <div class="h-title" id="siteTitle">土豪哥的旅行漫遊地圖</div>
+      <div class="h-sub" id="siteSub">TuHaoGe's Travel Map</div>
     </div>
     <div class="h-actions">
 
@@ -400,16 +400,35 @@ let activeFilters  = new Set(['sight','restaurant','nature']);
 
 // ── Boot ──
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadData();
-  const s = TRAVEL_DATA.site;
-  document.title = s.title;
-  document.getElementById('siteTitle').textContent = s.title;
-  document.getElementById('siteSub').textContent   = s.subtitle;
+  // 優先讀 localStorage（與後台同步），再 fallback 到 data.json
+  loadFromLocalStorage();
+  if (!TRAVEL_DATA || !TRAVEL_DATA.countries?.length) {
+    await loadData(); // fetch data.json
+  }
+  const s = TRAVEL_DATA?.site || {};
+  document.title = s.title || '土豪哥的旅行漫遊地圖';
+  document.getElementById('siteTitle').textContent = s.title || '土豪哥的旅行漫遊地圖';
+  document.getElementById('siteSub').textContent   = s.subtitle || "TuHaoGe's Travel Map";
   initMap();
   buildTabs();
-  if (TRAVEL_DATA.countries.length) selectCountry(TRAVEL_DATA.countries[0]);
+  if (TRAVEL_DATA?.countries?.length) selectCountry(TRAVEL_DATA.countries[0]);
   initDragResize();
 });
+
+function loadFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem('travelMapAdmin');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.countries?.length) {
+        TRAVEL_DATA = parsed;
+        console.log('✅ 從後台 localStorage 載入資料，共', parsed.countries.length, '個國家');
+        return;
+      }
+    }
+  } catch(e) {}
+  TRAVEL_DATA = null;
+}
 
 // ── Tabs ──
 function buildTabs() {
