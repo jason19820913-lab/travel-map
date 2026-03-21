@@ -400,11 +400,7 @@ let activeFilters  = new Set(['sight','restaurant','nature']);
 
 // ── Boot ──
 document.addEventListener('DOMContentLoaded', async () => {
-  // 優先讀 localStorage（與後台同步），再 fallback 到 data.json
-  loadFromLocalStorage();
-  if (!TRAVEL_DATA || !TRAVEL_DATA.countries?.length) {
-    await loadData(); // fetch data.json
-  }
+  await loadData(); // 從 data.json 載入
   const s = TRAVEL_DATA?.site || {};
   document.title = s.title || '土豪哥的旅行漫遊地圖';
   document.getElementById('siteTitle').textContent = s.title || '土豪哥的旅行漫遊地圖';
@@ -414,21 +410,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (TRAVEL_DATA?.countries?.length) selectCountry(TRAVEL_DATA.countries[0]);
   initDragResize();
 });
-
-function loadFromLocalStorage() {
-  try {
-    const raw = localStorage.getItem('travelMapAdmin');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed?.countries?.length) {
-        TRAVEL_DATA = parsed;
-        console.log('✅ 從後台 localStorage 載入資料，共', parsed.countries.length, '個國家');
-        return;
-      }
-    }
-  } catch(e) {}
-  TRAVEL_DATA = null;
-}
 
 // ── Tabs ──
 function buildTabs() {
