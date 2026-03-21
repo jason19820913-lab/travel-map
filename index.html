@@ -237,7 +237,7 @@ main{
 /* ══ LEAFLET POPUP ══ */
 .leaflet-popup-content-wrapper{border:4px solid #1a1a1a!important;border-radius:16px!important;box-shadow:6px 6px 0 #1a1a1a!important;padding:0!important;overflow:hidden;font-family:'Nunito','Noto Sans TC',sans-serif!important;}
 .leaflet-popup-tip-container{display:none;}
-.leaflet-popup-content{margin:0!important;min-width:200px!important;}
+.leaflet-popup-content{margin:0!important;min-width:220px!important;max-width:260px!important;}
 .leaflet-popup-close-button{
   position:absolute!important;right:8px!important;top:8px!important;
   width:22px!important;height:22px!important;
@@ -253,15 +253,15 @@ main{
   border-bottom:3px solid #1a1a1a;
 }
 .pp-head > div { flex:1; min-width:0; padding-right:18px; }
-.pp-acts{padding:8px 12px 10px;display:flex;gap:7px;flex-wrap:wrap;}
+.pp-acts{padding:8px 10px 10px;display:flex;gap:6px;flex-wrap:nowrap;}
 .pp-btn{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:6px 12px;border:2.5px solid #1a1a1a;border-radius:9px;
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  padding:7px 8px;border:2.5px solid #1a1a1a;border-radius:9px;
   font-family:'Nunito','Noto Sans TC',sans-serif;
   font-size:.72rem;font-weight:800;
   cursor:pointer;box-shadow:3px 3px 0 #1a1a1a;
   transition:all .12s;background:#FFE94E;color:#1a1a1a;
-  text-decoration:none;
+  text-decoration:none;flex:1;white-space:nowrap;
 }
 .pp-btn:active{transform:translate(3px,3px);box-shadow:none;}
 .pp-btn-nav{background:#4FC3F7;}
