@@ -469,27 +469,29 @@ function renderCards(c) {
   c.places.filter(p => activeFilters.has(p.type)).forEach(pl => {
     const t   = TYPE[pl.type];
     const dur = pl.duration ? (pl.duration>=60 ? Math.floor(pl.duration/60)+'h'+(pl.duration%60?pl.duration%60+'m':'') : pl.duration+'min') : '';
+    const navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + pl.lat + ',' + pl.lng + '&travelmode=walking';
+    const telBtn = pl.phone ? '<a class="abtn abtn-tel" href="tel:' + pl.phone + '">📞 電話</a>' : '';
+    const artBtn = pl.article ? '<a class="abtn abtn-art" href="' + pl.article + '" target="_blank">📝 文章</a>' : '';
     const card = document.createElement('div');
-    card.className = `pcard ${pl.type}`;
-    card.id = `card-${pl.id}`;
-    card.innerHTML = `
-      <div class="pcard-top" onclick="toggleCard('${pl.id}',${pl.lat},${pl.lng})">
-        <div class="pcard-ico">${pl.icon}</div>
-        <div class="pcard-info">
-          <div class="pcard-name">${pl.name}</div>
-          <span class="pcard-tag">${t.emoji} ${t.label}</span>
-          ${pl.tips ? `<div class="pcard-meta">💡 ${pl.tips}${dur?' · ⏱ '+dur:''}</div>` : ''}
-        </div>
-        <span class="chev" id="chev-${pl.id}">▾</span>
-      </div>
-      <div class="pcard-body" id="body-${pl.id}">
-        <p class="pdesc">${pl.desc}</p>
-        <div class="pbtns">
-          <a class="abtn abtn-nav" href="https://www.google.com/maps/dir/?api=1&destination=\${pl.lat},\${pl.lng}&travelmode=walking" target="_blank">🧭 導航</a>
-          \${pl.phone ? `<a class="abtn abtn-tel" href="tel:\${pl.phone}">📞 \${pl.phone}</a>` : ''}
-          \${pl.article ? `<a class="abtn abtn-art" href="\${pl.article}" target="_blank">📝 文章</a>` : ''}
-        </div>
-      </div>`;
+    card.className = 'pcard ' + pl.type;
+    card.id = 'card-' + pl.id;
+    card.innerHTML =
+      '<div class="pcard-top" onclick="toggleCard(\''+pl.id+'\','+pl.lat+','+pl.lng+')">' +
+        '<div class="pcard-ico">' + pl.icon + '</div>' +
+        '<div class="pcard-info">' +
+          '<div class="pcard-name">' + pl.name + '</div>' +
+          '<span class="pcard-tag">' + t.emoji + ' ' + t.label + '</span>' +
+          (pl.tips ? '<div class="pcard-meta">💡 ' + pl.tips + (dur ? ' · ⏱ ' + dur : '') + '</div>' : '') +
+        '</div>' +
+        '<span class="chev" id="chev-' + pl.id + '">▾</span>' +
+      '</div>' +
+      '<div class="pcard-body" id="body-' + pl.id + '">' +
+        '<p class="pdesc">' + pl.desc + '</p>' +
+        '<div class="pbtns">' +
+          '<a class="abtn abtn-nav" href="' + navUrl + '" target="_blank">🧭 導航</a>' +
+          telBtn + artBtn +
+        '</div>' +
+      '</div>';
     list.appendChild(card);
   });
 }
