@@ -1,63 +1,30 @@
-{
-  "site": {
-    "title": "土豪哥旅行漫遊地圖",
-    "subtitle": "My Comic Travel Map",
-    "description": "記錄每一段旅行的美好，分享給每一位旅人",
-    "adminPassword": "travel2024"
-  },
-  "countries": [
-    {
-      "id": "japan",
-      "name": "日本",
-      "flag": "🇯🇵",
-      "desc": "",
-      "color": "#e91c60",
-      "center": [
-        35.011,
-        135.768
-      ],
-      "zoom": 12,
-      "places": [
-        {
-          "name": "Cafe & Bar Anthem",
-          "icon": "🍰",
-          "type": "restaurant",
-          "lat": 34.6865,
-          "lng": 135.18792,
-          "tips": "",
-          "desc": "最推薦紗布起司蛋糕",
-          "article": "https://jasonslife.tw/anthem/",
-          "duration": 60,
-          "nav": "https://maps.google.com/?q=34.6865,135.18792",
-          "id": "p_1773465811617"
-        }
-      ]
+// js/data.js
+// Loads travel data from data.json and exposes window.TRAVEL_DATA
+
+var TRAVEL_DATA = null;
+
+async function loadData() {
+  // Try fetching data.json (works when served via HTTP/GitHub Pages)
+  try {
+    const res = await fetch('data.json?v=' + Date.now());
+    if (!res.ok) throw new Error('fetch failed');
+    TRAVEL_DATA = await res.json();
+  } catch(e) {
+    console.warn('Could not fetch data.json, using inline fallback.');
+    TRAVEL_DATA = getInlineData();
+  }
+  return TRAVEL_DATA;
+}
+
+// Fallback inline data (mirrors data.json — keep in sync)
+function getInlineData() {
+  return {
+    site: {
+      title: "土豪哥的旅行漫遊地圖",
+      subtitle: "TuHaoGe's Travel Map",
+      description: "記錄每一段旅行的美好，分享給每一位旅人",
+      adminPassword: "travel2024"
     },
-    {
-      "id": "korea",
-      "name": "韓國",
-      "flag": "🇰🇷",
-      "desc": "2022 · 首爾釜山 7 天 6 夜",
-      "color": "#4FC3F7",
-      "center": [
-        37.566,
-        126.978
-      ],
-      "zoom": 12,
-      "places": []
-    },
-    {
-      "id": "thailand",
-      "name": "泰國",
-      "flag": "🇹🇭",
-      "desc": "2023 · 曼谷清邁 10 天 9 夜",
-      "color": "#69D84F",
-      "center": [
-        13.756,
-        100.502
-      ],
-      "zoom": 12,
-      "places": []
-    }
-  ]
+    countries: []
+  };
 }
