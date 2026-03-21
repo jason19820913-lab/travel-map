@@ -1,7 +1,7 @@
 {
   "site": {
-    "title": "旅行漫遊地圖",
-    "subtitle": "My Comic Travel Map",
+    "title": "土豪哥的旅行漫遊地圖",
+    "subtitle": "TuHaoGe's Travel Map",
     "description": "記錄每一段旅行的美好，分享給每一位旅人",
     "adminPassword": "travel2024"
   },
@@ -10,13 +10,13 @@
       "id": "japan",
       "name": "日本",
       "flag": "🇯🇵",
-      "desc": "",
+      "desc": "神戶美食之旅",
       "color": "#e91c60",
       "center": [
-        35.011,
-        135.768
+        34.69,
+        135.19
       ],
-      "zoom": 12,
+      "zoom": 14,
       "places": [
         {
           "name": "Cafe & Bar Anthem",
