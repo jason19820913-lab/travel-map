@@ -1,6 +1,6 @@
 {
   "site": {
-    "title": "土豪哥的旅行漫遊地圖",
+    "title": "旅行漫遊地圖",
     "subtitle": "My Comic Travel Map",
     "description": "記錄每一段旅行的美好，分享給每一位旅人",
     "adminPassword": "travel2024"
@@ -59,7 +59,22 @@
         126.978
       ],
       "zoom": 12,
-      "places": []
+      "places": [
+        {
+          "name": "1인1잔",
+          "icon": "🍰",
+          "type": "restaurant",
+          "lat": 37.64118,
+          "lng": 126.93782,
+          "tips": "恩平區韓屋旁人氣咖啡廳",
+          "desc": "建議在10點開門前排隊入場，才有機會入座3樓絕佳的落地窗用餐位置",
+          "article": "",
+          "phone": "+8223551111",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=37.64118,126.93782",
+          "id": "p_1774142927990"
+        }
+      ]
     },
     {
       "id": "thailand",
