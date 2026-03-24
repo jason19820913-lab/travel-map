@@ -285,6 +285,32 @@ main{
 .rbtn-ok{background:var(--gn);}
 .rbtn-cancel{background:var(--bk);color:#fff;}
 
+/* ══ LOCATE BUTTON ══ */
+#locateBtn{
+  position:absolute;
+  bottom:32px;right:12px;
+  z-index:600;
+  width:44px;height:44px;
+  background:var(--wh);
+  border:3px solid var(--bk);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3em;
+  cursor:pointer;
+  box-shadow:var(--sh);
+  transition:all .15s;
+}
+#locateBtn:hover{transform:translate(-2px,-2px);box-shadow:var(--shl);}
+#locateBtn:active{transform:translate(3px,3px);box-shadow:none;}
+#locateBtn.loading{animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#locateBtn.located{background:var(--bl);}
+
+/* ══ MOBILE SHEET HANDLE ══ */
+#sheetHandle{
+  display:none; /* shown only on mobile via media query */
+}
+
 /* ══ TOAST ══ */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bk);color:#fff;padding:9px 20px;border-radius:30px;font-size:.8rem;font-weight:800;z-index:9999;transition:transform .3s;white-space:nowrap;box-shadow:var(--shl);}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -366,6 +392,25 @@ main{
     display:flex;
     flex-direction:column;
   }
+  /* Mobile sheet handle visible */
+  #sheetHandle{
+    display:flex;
+    align-items:center;justify-content:center;
+    height:22px;
+    flex-shrink:0;
+    background:var(--yw);
+    border-top:3px solid var(--bk);
+    border-bottom:2px solid rgba(0,0,0,.12);
+    cursor:row-resize;
+    touch-action:none;
+  }
+  #sheetHandle:active{background:var(--pk);}
+  #sheetPill{
+    width:36px;height:4px;
+    background:rgba(0,0,0,.25);
+    border-radius:2px;
+  }
+
   /* sidebar head stays fixed, place-list scrolls */
   .sb-head{flex-shrink:0;}
   .place-list{
@@ -415,6 +460,10 @@ main{
     <!-- MAP -->
     <div id="mapWrap">
       <div id="map"></div>
+      <!-- 定位按鈕 -->
+      <button id="locateBtn" onclick="locateMe()" title="定位我的位置">
+        <span id="locateIcon">📍</span>
+      </button>
     </div>
 
     <!-- DRAG HANDLE 1 (map ↔ sidebar) -->
@@ -422,6 +471,10 @@ main{
 
     <!-- SIDEBAR -->
     <aside id="sidebar">
+      <!-- 手機版：景點清單抽屜拉把 -->
+      <div id="sheetHandle">
+        <div id="sheetPill"></div>
+      </div>
       <div class="sb-head">
         <div class="sb-title"><span id="sflag">🗺️</span><span id="stitle">選擇國家</span></div>
         <div class="sb-desc" id="sdesc">從上方選擇國家</div>
@@ -468,6 +521,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   buildTabs();
   if (TRAVEL_DATA?.countries?.length) selectCountry(TRAVEL_DATA.countries[0]);
   initDragResize();
+  initMobileSheetDrag();
 });
 
 // ── Tabs ──
@@ -649,6 +703,101 @@ function initDragResize() {
       map && map.invalidateSize();
     });
   }
+}
+
+// ── Locate Me ──
+let locateMarker = null;
+function locateMe() {
+  const btn = document.getElementById('locateBtn');
+  const icon = document.getElementById('locateIcon');
+  if (!navigator.geolocation) { showToast('⚠️ 你的瀏覽器不支援定位'); return; }
+
+  btn.classList.add('loading');
+  icon.textContent = '🔄';
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      // Remove old marker
+      if (locateMarker) map.removeLayer(locateMarker);
+
+      // Add pulsing locate marker
+      const locIcon = L.divIcon({
+        html: '<div style="width:18px;height:18px;background:#4FC3F7;border:3px solid #1a1a1a;border-radius:50%;box-shadow:0 0 0 6px rgba(79,195,247,.3),3px 3px 0 #1a1a1a;animation:pulse 1.5s ease-in-out infinite;"></div>',
+        className: '',
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+      locateMarker = L.marker([lat, lng], { icon: locIcon, zIndexOffset: 1000 }).addTo(map);
+      locateMarker.bindPopup('<div style="font-family:'Nunito',sans-serif;font-weight:800;padding:6px 10px;">📍 你在這裡</div>').openPopup();
+
+      map.flyTo([lat, lng], 15, { duration: 1.2 });
+      btn.classList.remove('loading');
+      btn.classList.add('located');
+      icon.textContent = '📍';
+      setTimeout(() => btn.classList.remove('located'), 3000);
+      showToast('📍 已定位到你的位置！');
+    },
+    err => {
+      btn.classList.remove('loading');
+      icon.textContent = '📍';
+      const msg = err.code === 1 ? '請允許瀏覽器存取位置' :
+                  err.code === 2 ? '無法取得位置，請確認 GPS 開啟' : '定位逾時，請重試';
+      showToast('⚠️ ' + msg);
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+// Add pulse animation for locate marker
+(function(){
+  const s = document.createElement('style');
+  s.textContent = '@keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(79,195,247,.4),3px 3px 0 #1a1a1a;}50%{box-shadow:0 0 0 10px rgba(79,195,247,.1),3px 3px 0 #1a1a1a;}}';
+  document.head.appendChild(s);
+})();
+
+// ── Mobile Sheet Handle drag ──
+function initMobileSheetDrag() {
+  if (window.innerWidth > 600) return;
+  const handle  = document.getElementById('sheetHandle');
+  const sidebar = document.getElementById('sidebar');
+  const mapWrap = document.getElementById('mapWrap');
+  const mainEl  = document.querySelector('main');
+  if (!handle || !sidebar || !mapWrap) return;
+
+  let dragging = false, startY = 0, startMapH = 0;
+
+  function onStart(y) {
+    dragging = true;
+    startY = y;
+    startMapH = mapWrap.offsetHeight;
+    document.body.style.userSelect = 'none';
+    handle.style.background = 'var(--pk)';
+  }
+  function onMove(y) {
+    if (!dragging) return;
+    const totalH = mainEl.offsetHeight;
+    const newMapH = Math.min(Math.max(startMapH + (y - startY), 80), totalH - 100);
+    mapWrap.style.height = newMapH + 'px';
+    map && map.invalidateSize();
+  }
+  function onEnd() {
+    if (!dragging) return;
+    dragging = false;
+    document.body.style.userSelect = '';
+    handle.style.background = '';
+    map && map.invalidateSize();
+  }
+
+  handle.addEventListener('mousedown',  e => { onStart(e.clientY); e.preventDefault(); });
+  document.addEventListener('mousemove', e => onMove(e.clientY));
+  document.addEventListener('mouseup',   onEnd);
+
+  handle.addEventListener('touchstart',  e => { onStart(e.touches[0].clientY); }, { passive: true });
+  document.addEventListener('touchmove',  e => { if(dragging){ onMove(e.touches[0].clientY); e.preventDefault(); } }, { passive: false });
+  document.addEventListener('touchend',   onEnd);
 }
 
 // ── Speed lines ──
