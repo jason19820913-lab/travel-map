@@ -45,6 +45,20 @@
           "duration": 90,
           "nav": "https://maps.google.com/?q=34.69281,135.19151",
           "id": "p_1773470346860"
+        },
+        {
+          "name": "神戶三宮皇家公園CANVAS酒店",
+          "icon": "🏨",
+          "type": "sight",
+          "lat": 34.69295,
+          "lng": 135.18991,
+          "tips": "周遭生活機能很棒",
+          "desc": "神戶三宮是多數旅客造訪神戶時的首選住宿區域\n第一次到神戶自由行選擇住在三宮周邊\n都能大幅提升交通便利性與行程彈性\nCANVAS對面就是激安殿堂，超商林立，旁邊還有大國藥妝\n擁有大方設計的大廳結合Lounge，每晚有免費點心\n滿值得推薦",
+          "article": "https://jasonslife.tw/canvas/",
+          "phone": "",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=34.69295,135.18991",
+          "id": "p_1774362841844"
         }
       ]
     },
