@@ -174,9 +174,15 @@ textarea{resize:vertical;min-height:80px;}
         <button class="action-btn" style="background:var(--blue);" onclick="testGithubConnection()">🔌 測試連線</button>
         <span id="ghConnStatus" style="font-size:.78rem;font-weight:800;"></span>
       </div>
-      <p style="font-size:.68rem;color:#bbb;font-weight:700;margin-top:10px;">
-        💡 Token 需要勾選 <code style="background:#fff;padding:1px 5px;border-radius:3px;border:1px solid #ddd;">repo</code> 權限。Token 只存在你的瀏覽器，不會上傳到任何地方。
-      </p>
+      <div style="background:#fff9cc;border:2.5px solid #1a1a1a;border-radius:10px;padding:12px 14px;margin-top:12px;font-size:.74rem;font-weight:700;line-height:1.9;">
+        <b>🔑 產生 Token 步驟：</b><br>
+        1. 點上方「點此產生 Token」連結（需登入 GitHub）<br>
+        2. Note 填任意名稱，Expiration 選 <b>No expiration</b><br>
+        3. 勾選 <b>repo</b>（第一個大項目，全勾）<br>
+        4. 點最下面的 <b>Generate token</b><br>
+        5. 複製 <code style="background:#fff;padding:1px 5px;border-radius:3px;border:1px solid #ccc;">ghp_xxxxx</code> 貼到上方欄位<br>
+        6. 點「💾 儲存設定」→「🔌 測試連線」確認 ✅
+      </div>
     </div>
 
     <!-- 國家與景點 -->
@@ -194,12 +200,14 @@ textarea{resize:vertical;min-height:80px;}
       <p style="font-size:.78rem;color:#888;font-weight:700;margin-bottom:14px;">
         完成景點編輯後，點下方按鈕直接推送到 GitHub，前台約 1-3 分鐘後自動更新。
       </p>
+      <!-- GitHub 設定狀態提示 -->
+      <div id="ghSettingsCheck" style="margin-bottom:10px;font-size:.75rem;font-weight:800;"></div>
       <div class="btn-row" style="margin-bottom:14px;">
-        <button class="action-btn" style="background:var(--pink);color:#fff;font-size:1rem;padding:10px 24px;" onclick="publishToGithub()">
+        <button class="action-btn" style="background:var(--pink);color:#fff;font-size:1rem;padding:12px 28px;box-shadow:5px 5px 0 #1a1a1a;" onclick="publishToGithub()">
           🚀 立即發布到網站
         </button>
-        <div id="publishStatus" style="font-size:.78rem;font-weight:800;display:flex;align-items:center;gap:8px;"></div>
       </div>
+      <div id="publishStatus" style="font-size:.8rem;font-weight:800;min-height:1.5em;"></div>
       <div style="border-top:2.5px dashed #ddd;padding-top:14px;margin-top:4px;">
         <p style="font-size:.73rem;color:#aaa;font-weight:700;margin-bottom:8px;">⚙️ 備用方案（未設定 GitHub Token 時）</p>
         <div class="btn-row">
@@ -272,6 +280,7 @@ textarea{resize:vertical;min-height:80px;}
           <option value="sight">🏛️ 景點</option>
           <option value="restaurant">🍽️ 餐廳</option>
           <option value="nature">🌿 自然</option>
+          <option value="hotel">🏨 住宿</option>
         </select>
       </div>
       <div class="fg"><label>建議停留（分鐘）</label><input type="number" id="f_duration" value="60" min="10" step="10"></div>
@@ -564,6 +573,14 @@ function loadGithubSettings() {
   if (document.getElementById('gh_user'))  document.getElementById('gh_user').value  = u;
   if (document.getElementById('gh_repo'))  document.getElementById('gh_repo').value  = r;
   if (document.getElementById('gh_token')) document.getElementById('gh_token').value = t;
+  // Show status in publish section
+  const checkEl = document.getElementById('ghSettingsCheck');
+  if (!checkEl) return;
+  if (u && r && t) {
+    checkEl.innerHTML = `<span style="color:#69D84F">✅ GitHub 已設定：${u}/${r}</span>`;
+  } else {
+    checkEl.innerHTML = `<span style="color:#FF9A3C">⚠️ 尚未設定 GitHub Token，請先到上方「🚀 一鍵同步到 GitHub」完成設定</span>`;
+  }
 }
 
 function toggleTokenVisibility() {
@@ -611,7 +628,9 @@ async function publishToGithub() {
   statusEl.innerHTML = '<span style="color:#888">⏳ 推送中，請稍候...</span>';
 
   const content    = JSON.stringify(D, null, 2);
-  const b64content = btoa(unescape(encodeURIComponent(content)));
+  // 安全的 base64 編碼（支援中文）
+  const b64content = btoa(encodeURIComponent(content).replace(/%([0-9A-F]{2})/g,
+    (_, p1) => String.fromCharCode('0x' + p1)));
   const filePath   = 'data.json';
   const apiUrl     = `https://api.github.com/repos/${user}/${repo}/contents/${filePath}`;
   const headers    = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
@@ -644,8 +663,19 @@ async function publishToGithub() {
       throw new Error(err.message || `HTTP ${putRes.status}`);
     }
   } catch(e) {
-    statusEl.innerHTML = `<span style="color:#FF4B4B">❌ 發布失敗：${e.message}</span>`;
-    toast('❌ 推送失敗，請檢查設定');
+    let hint = '';
+    const msg = e.message || '';
+    if (msg.includes('401') || msg.includes('Bad credentials')) {
+      hint = '→ Token 無效，請重新產生並確認勾選 <b>repo</b> 權限';
+    } else if (msg.includes('404')) {
+      hint = '→ Repository 不存在，請確認帳號和名稱是否正確';
+    } else if (msg.includes('422')) {
+      hint = '→ 內容格式錯誤，請確認 data.json 格式正確';
+    } else if (msg.includes('fetch') || msg.includes('network') || msg.includes('Failed')) {
+      hint = '→ 網路問題，請確認可以連上 GitHub';
+    }
+    statusEl.innerHTML = `<span style="color:#FF4B4B">❌ 發布失敗：${msg}<br><span style="font-size:.75rem">${hint}</span></span>`;
+    toast('❌ 推送失敗');
   }
 }
 

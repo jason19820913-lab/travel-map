@@ -113,6 +113,7 @@ main{
 .sight     .pcard-top{background:#e0f4ff;} .sight     .pcard-ico{background:var(--bl);} .sight     .pcard-tag{background:var(--bl);}
 .restaurant .pcard-top{background:#fff3e0;} .restaurant .pcard-ico{background:var(--or);} .restaurant .pcard-tag{background:var(--or);}
 .nature    .pcard-top{background:#e8fce0;} .nature    .pcard-ico{background:var(--gn);} .nature    .pcard-tag{background:var(--gn);}
+.hotel     .pcard-top{background:#f0e8ff;} .hotel     .pcard-ico{background:var(--pu);} .hotel     .pcard-tag{background:var(--pu);}
 .pcard-body{display:none;padding:9px 11px;background:var(--wh);border-top:2.5px solid var(--bk);animation:sld .2s ease;}
 .pcard-body.open{display:block;}
 @keyframes sld{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
@@ -504,7 +505,8 @@ main{
 const TYPE = {
   sight:      {label:'景點', color:'#4FC3F7', emoji:'🏛️'},
   restaurant: {label:'餐廳', color:'#FF9A3C', emoji:'🍽️'},
-  nature:     {label:'自然', color:'#69D84F', emoji:'🌿'}
+  nature:     {label:'自然', color:'#69D84F', emoji:'🌿'},
+  hotel:      {label:'住宿', color:'#B57BFF', emoji:'🏨'}
 };
 
 let currentCountry = null;
