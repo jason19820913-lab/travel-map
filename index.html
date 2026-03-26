@@ -733,7 +733,7 @@ function locateMe() {
         iconAnchor: [9, 9]
       });
       locateMarker = L.marker([lat, lng], { icon: locIcon, zIndexOffset: 1000 }).addTo(map);
-      locateMarker.bindPopup('<div style="font-family:'Nunito',sans-serif;font-weight:800;padding:6px 10px;">📍 你在這裡</div>').openPopup();
+      locateMarker.bindPopup('<div style="font-family:Nunito,sans-serif;font-weight:800;padding:6px 10px;">📍 你在這裡</div>').openPopup();
 
       map.flyTo([lat, lng], 15, { duration: 1.2 });
       btn.classList.remove('loading');
