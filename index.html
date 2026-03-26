@@ -89,6 +89,18 @@ main{
 .fchip{padding:3px 10px;border:2.5px solid var(--bk);border-radius:20px;font-size:.68rem;font-weight:800;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.5);box-shadow:2px 2px 0 var(--bk);}
 .fchip:active{transform:translate(2px,2px);box-shadow:none;}
 .fchip.on-sight{background:var(--bl);}
+
+/* ── City filter row ── */
+.city-row{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;}
+.city-row:empty{display:none;}
+.ccip{
+  padding:3px 10px;border:2.5px solid var(--bk);border-radius:20px;
+  font-size:.65rem;font-weight:800;cursor:pointer;
+  background:rgba(255,255,255,.5);box-shadow:2px 2px 0 var(--bk);
+  transition:all .15s;
+}
+.ccip:active{transform:translate(2px,2px);box-shadow:none;}
+.ccip.on{background:var(--bk);color:var(--yw);}
 .fchip.on-restaurant{background:var(--or);}
 .fchip.on-nature{background:var(--gn);}
 .place-list{flex:1;overflow-y:auto;padding:8px 7px;display:flex;flex-direction:column;gap:6px;}
@@ -381,15 +393,15 @@ main{
 
   #dh2{display:none!important;}
 
-  /* ── Sidebar: takes remaining height, scrollable ── */
+  /* ── Sidebar: flex column, fills remaining height ── */
   #sidebar{
     width:100%;
     min-width:unset;
     flex:1;
-    min-height:0;
+    min-height:0;          /* critical: allows flex child to shrink */
     border-left:none;
     border-top:none;
-    overflow:hidden;
+    overflow:hidden;       /* clip, inner list scrolls independently */
     display:flex;
     flex-direction:column;
   }
@@ -397,26 +409,28 @@ main{
   #sheetHandle{
     display:flex;
     align-items:center;justify-content:center;
-    height:22px;
+    height:26px;
     flex-shrink:0;
     background:var(--yw);
     border-top:3px solid var(--bk);
-    border-bottom:2px solid rgba(0,0,0,.12);
+    border-bottom:2px solid rgba(0,0,0,.15);
     cursor:row-resize;
     touch-action:none;
+    user-select:none;
   }
   #sheetHandle:active{background:var(--pk);}
   #sheetPill{
-    width:36px;height:4px;
-    background:rgba(0,0,0,.25);
-    border-radius:2px;
+    width:44px;height:5px;
+    background:rgba(0,0,0,.3);
+    border-radius:3px;
   }
 
-  /* sidebar head stays fixed, place-list scrolls */
+  /* sb-head pinned, place-list scrolls */
   .sb-head{flex-shrink:0;}
   .place-list{
     flex:1;
-    overflow-y:auto;
+    min-height:0;          /* critical: allow scroll within flex */
+    overflow-y:scroll;     /* always show scrollbar track on iOS */
     -webkit-overflow-scrolling:touch;
   }
 
@@ -480,6 +494,8 @@ main{
         <div class="sb-title"><span id="sflag">🗺️</span><span id="stitle">選擇國家</span></div>
         <div class="sb-desc" id="sdesc">從上方選擇國家</div>
         <div class="filter-row" id="filterRow"></div>
+        <!-- 城市篩選 -->
+        <div class="city-row" id="cityRow"></div>
       </div>
       <div class="place-list" id="placeList"></div>
     </aside>
@@ -511,6 +527,7 @@ const TYPE = {
 
 let currentCountry = null;
 let activeFilters  = new Set(['sight','restaurant','nature']);
+let activeCities   = new Set(); // empty = show all
 
 // ── Boot ──
 document.addEventListener('DOMContentLoaded', async () => {
@@ -554,34 +571,79 @@ function renderSidebar(c) {
   document.getElementById('sflag').textContent  = c.flag;
   document.getElementById('stitle').textContent = c.name;
   document.getElementById('sdesc').textContent  = c.desc;
+
+  // Type filter chips
   const row = document.getElementById('filterRow');
   row.innerHTML = '';
   [...new Set(c.places.map(p=>p.type))].forEach(type => {
     const t = TYPE[type];
     const chip = document.createElement('button');
-    chip.className = `fchip on-${type}`;
+    chip.className = 'fchip on-' + type;
     chip.dataset.type = type;
-    chip.textContent = `${t.emoji} ${t.label}`;
+    chip.textContent = t.emoji + ' ' + t.label;
     chip.onclick = () => {
       if (activeFilters.has(type)) {
         if (activeFilters.size === 1) return;
         activeFilters.delete(type);
-        chip.classList.remove(`on-${type}`); chip.style.opacity = '.4';
+        chip.classList.remove('on-' + type); chip.style.opacity = '.4';
       } else {
         activeFilters.add(type);
-        chip.classList.add(`on-${type}`); chip.style.opacity = '1';
+        chip.classList.add('on-' + type); chip.style.opacity = '1';
       }
       renderCards(c); showMarkersOfTypes(c, activeFilters);
     };
     row.appendChild(chip);
   });
+
+  // City filter
+  activeCities = new Set();
+  renderCityRow(c);
   renderCards(c);
+}
+
+function renderCityRow(c) {
+  const cityRow = document.getElementById('cityRow');
+  if (!cityRow) return;
+  const cities = [...new Set(c.places.filter(p => p.city && p.city.trim()).map(p => p.city.trim()))];
+  cityRow.innerHTML = '';
+  if (cities.length < 2) return; // hide when 0 or 1 city
+  // All chip
+  const allChip = document.createElement('button');
+  allChip.className = 'ccip on';
+  allChip.id = 'ccip-all';
+  allChip.textContent = '📍 全部';
+  allChip.onclick = () => {
+    activeCities = new Set();
+    cityRow.querySelectorAll('.ccip').forEach(x => x.classList.remove('on'));
+    allChip.classList.add('on');
+    renderCards(c); showMarkersOfTypes(c, activeFilters);
+  };
+  cityRow.appendChild(allChip);
+  // Per-city chips
+  cities.forEach(city => {
+    const chip = document.createElement('button');
+    chip.className = 'ccip';
+    chip.textContent = '🏙 ' + city;
+    chip.onclick = () => {
+      if (activeCities.has(city)) {
+        activeCities.delete(city);
+        chip.classList.remove('on');
+        if (activeCities.size === 0) allChip.classList.add('on');
+      } else {
+        activeCities.add(city);
+        chip.classList.add('on');
+        allChip.classList.remove('on');
+      }
+      renderCards(c); showMarkersOfTypes(c, activeFilters);
+    };
+    cityRow.appendChild(chip);
+  });
 }
 
 function renderCards(c) {
   const list = document.getElementById('placeList');
   list.innerHTML = '';
-  c.places.filter(p => activeFilters.has(p.type)).forEach(pl => {
+  c.places.filter(p => activeFilters.has(p.type) && (activeCities.size === 0 || activeCities.has(p.city))).forEach(pl => {
     const t   = TYPE[pl.type];
     const dur = pl.duration ? (pl.duration>=60 ? Math.floor(pl.duration/60)+'h'+(pl.duration%60?pl.duration%60+'m':'') : pl.duration+'min') : '';
     const navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + pl.lat + ',' + pl.lng + '&travelmode=walking';
