@@ -470,7 +470,7 @@ function delCountry(id){
 function addPlace(cid){
   eCtx={type:'place',cid,pid:null};
   document.getElementById('placeModalTitle').textContent='新增景點';
-  ['f_name','f_icon','f_tips','f_desc','f_article','f_phone','f_lat','f_lng'].forEach(i=>document.getElementById(i).value='');
+  ['f_name','f_icon','f_tips','f_city','f_desc','f_article','f_phone','f_lat','f_lng'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('f_type').value='sight';
   document.getElementById('f_duration').value='60';
   document.getElementById('placeModal').classList.remove('hidden');
@@ -489,6 +489,7 @@ function editPlace(cid,pid){
   document.getElementById('f_desc').value    =p.desc;
   document.getElementById('f_article').value =p.article||'';
   document.getElementById('f_phone').value   =p.phone||'';
+  document.getElementById('f_city').value    =p.city||'';
   document.getElementById('f_duration').value=p.duration||60;
   document.getElementById('placeModal').classList.remove('hidden');
 }
@@ -499,7 +500,7 @@ function savePlaceModal(){
   const desc=g('f_desc'),dur=parseInt(g('f_duration'))||60;
   if(!name||!icon||!desc||isNaN(lat)||isNaN(lng)){toast('⚠️ 請填寫所有必填欄位');return;}
   const c=D.countries.find(x=>x.id===eCtx.cid); if(!c) return;
-  const pd={name,icon,type,lat,lng,tips:g('f_tips'),desc,article:g('f_article'),
+  const pd={name,icon,type,lat,lng,tips:g('f_tips'),city:g('f_city'),desc,article:g('f_article'),
             phone:g('f_phone'),duration:dur,nav:`https://maps.google.com/?q=${lat},${lng}`};
   if(eCtx.pid){
     const idx=c.places.findIndex(x=>x.id===eCtx.pid);
