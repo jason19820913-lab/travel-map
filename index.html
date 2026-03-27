@@ -103,9 +103,19 @@ main{
 .ccip.on{background:var(--bk);color:var(--yw);}
 .fchip.on-restaurant{background:var(--or);}
 .fchip.on-nature{background:var(--gn);}
-.place-list{flex:1;overflow-y:auto;padding:8px 7px;display:flex;flex-direction:column;gap:6px;}
-.place-list::-webkit-scrollbar{width:4px;}
-.place-list::-webkit-scrollbar-thumb{background:var(--bk);border-radius:2px;}
+.place-list{
+  flex:1;
+  min-height:0;
+  overflow-y:scroll;
+  padding:8px 7px 8px 7px;
+  display:flex;flex-direction:column;gap:6px;
+  /* Always-visible scrollbar */
+  scrollbar-width:thin;
+  scrollbar-color:var(--bk) rgba(0,0,0,.08);
+}
+.place-list::-webkit-scrollbar{width:7px;}
+.place-list::-webkit-scrollbar-track{background:rgba(0,0,0,.07);border-radius:4px;}
+.place-list::-webkit-scrollbar-thumb{background:var(--bk);border-radius:4px;min-height:40px;}
 
 /* PLACE CARD */
 .pcard{border:var(--bdt);border-radius:14px;overflow:hidden;box-shadow:var(--sh);cursor:pointer;transition:transform .15s,box-shadow .15s;}
@@ -324,6 +334,22 @@ main{
   display:none; /* shown only on mobile via media query */
 }
 
+/* ══ SCROLL INDICATOR (bottom arrow) ══ */
+#scrollIndicator{
+  display:none;
+  align-items:center;justify-content:center;
+  padding:5px 0 3px;
+  flex-shrink:0;
+  background:linear-gradient(transparent, var(--wh) 60%);
+  font-size:.72rem;font-weight:800;
+  color:rgba(0,0,0,.4);
+  letter-spacing:.05em;
+  pointer-events:none;
+  animation:bounce2 1.2s ease-in-out infinite;
+}
+#scrollIndicator::before{content:'↓ 下滑看更多景點 ↓';}
+@keyframes bounce2{0%,100%{transform:translateY(0);}50%{transform:translateY(3px);}}
+
 /* ══ SCROLL HINT ══ */
 #scrollHint{
   display:none; /* desktop hidden */
@@ -394,16 +420,22 @@ main{
     border-top:3px solid var(--bk);
     border-bottom:3px solid var(--bk);
     background:var(--yw);
-    display:flex;align-items:center;justify-content:center;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     flex-shrink:0;
     user-select:none;
+    writing-mode:horizontal-tb;   /* force horizontal */
+    overflow:hidden;
   }
   #dh1::after{
-    content:'⬆ 上拉看地圖 · 下拉看景點 ⬇';
-    font-size:.58rem;
+    content:'⬆ 拖曳調整 ⬇';
+    font-size:.65rem;
     font-weight:800;
     color:rgba(0,0,0,.45);
-    letter-spacing:.05em;
+    letter-spacing:.08em;
+    white-space:nowrap;
+    writing-mode:horizontal-tb;  /* force horizontal text */
   }
   #dh1.active{background:var(--pk);}
   #dh1.active::after{color:#fff;}
@@ -443,30 +475,20 @@ main{
   /* sb-head pinned at top, does NOT scroll */
   .sb-head{flex-shrink:0;overflow:visible;}
 
-  /* place-list: always-visible scrollbar on mobile */
+  /* Mobile place-list */
   .place-list{
     flex:1;
     min-height:0;
-    overflow-y:scroll;              /* scroll, not auto — forces track visible */
+    overflow-y:scroll;
     -webkit-overflow-scrolling:touch;
-    overscroll-behavior:contain;
-    padding-right:4px;
+    overscroll-behavior-y:contain;
+    padding:8px 10px 8px 7px;  /* extra right padding for scrollbar */
+    scrollbar-width:thin;
+    scrollbar-color:rgba(0,0,0,.4) rgba(0,0,0,.08);
   }
-  /* Scrollbar always visible on webkit (iOS Chrome/Safari) */
-  .place-list::-webkit-scrollbar{
-    width:6px;
-    background:rgba(0,0,0,.06);
-    border-radius:3px;
-  }
-  .place-list::-webkit-scrollbar-thumb{
-    background:rgba(0,0,0,.35);
-    border-radius:3px;
-    min-height:40px;
-  }
-  .place-list::-webkit-scrollbar-track{
-    background:rgba(0,0,0,.06);
-    border-radius:3px;
-  }
+  .place-list::-webkit-scrollbar{width:7px;}
+  .place-list::-webkit-scrollbar-track{background:rgba(0,0,0,.07);border-radius:4px;}
+  .place-list::-webkit-scrollbar-thumb{background:rgba(0,0,0,.4);border-radius:4px;min-height:36px;}
 
   /* ── Planner: bottom sheet ── */
   #planner{
@@ -707,6 +729,25 @@ function renderCards(c) {
       '</div>';
     list.appendChild(card);
   });
+
+  // Show scroll indicator if list overflows
+  updateScrollIndicator();
+}
+
+function updateScrollIndicator() {
+  const list = document.getElementById('placeList');
+  if (!list) return;
+  let ind = document.getElementById('scrollIndicator');
+  if (!ind) {
+    ind = document.createElement('div');
+    ind.id = 'scrollIndicator';
+    list.parentNode.insertBefore(ind, list.nextSibling);
+  }
+  // Check if scrollable
+  setTimeout(() => {
+    const scrollable = list.scrollHeight > list.clientHeight + 4;
+    ind.style.display = scrollable ? 'flex' : 'none';
+  }, 50);
 }
 
 function toggleCard(id, lat, lng) {
