@@ -406,8 +406,9 @@ function render() {
               <span class="pr-icon">${p.icon}</span>
               <div class="pr-info">
                 <div class="pr-name">${p.name}</div>
-                <span class="pr-type ${p.type}">${{sight:'景點',restaurant:'餐廳',nature:'自然'}[p.type]}</span>
-                ${p.phone?`<div style="font-size:.62rem;color:#888;margin-top:2px;">📞 ${p.phone}</div>`:''}
+                <span class="pr-type ${p.type}">${{sight:'景點',restaurant:'餐廳',nature:'自然',hotel:'住宿'}[p.type]}</span>
+                ${p.city?`<div style="font-size:.62rem;color:#1a6ea8;font-weight:800;margin-top:2px;">🏙 ${p.city}</div>`:''}
+                ${p.phone?`<div style="font-size:.62rem;color:#888;margin-top:1px;">📞 ${p.phone}</div>`:''}
               </div>
               <div class="pr-btns">
                 <button class="icon-btn edit" onclick="editPlace('${c.id}','${p.id}')">✏️</button>
