@@ -22,17 +22,19 @@ html,body{height:100%;overflow:hidden;font-family:var(--fb);background:var(--yw)
 body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,.07) 1.5px,transparent 1.5px);background-size:18px 18px;pointer-events:none;z-index:0;}
 
 /* ══ APP SHELL ══ */
-#app{display:flex;flex-direction:column;height:100vh;position:relative;z-index:1;}
+#app{display:flex;flex-direction:column;height:100vh;max-height:100vh;position:relative;z-index:1;overflow:hidden;}
 
 /* ══ HEADER ══ */
 header{
   background:var(--pk);border-bottom:var(--bdt);
   padding:8px 16px;display:flex;align-items:center;gap:12px;
   flex-shrink:0;box-shadow:0 4px 0 var(--bk);z-index:200;
+  overflow:hidden;           /* prevent title from stretching header */
+  min-height:0;
 }
 .h-logo{width:44px;height:44px;background:var(--yw);border:var(--bdt);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:var(--sh);flex-shrink:0;animation:wiggle 3s ease-in-out infinite;}
 @keyframes wiggle{0%,100%{transform:rotate(-5deg);}50%{transform:rotate(5deg);}}
-.h-title{font-family:var(--fh);font-size:clamp(1rem,3vw,1.8rem);color:var(--wh);text-shadow:3px 3px 0 var(--bk);-webkit-text-stroke:1px var(--bk);}
+.h-title{font-family:var(--fh);font-size:clamp(.85rem,3.5vw,1.8rem);color:var(--wh);text-shadow:2px 2px 0 var(--bk);-webkit-text-stroke:1px var(--bk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .h-sub{font-size:.65rem;font-weight:800;color:rgba(255,254,245,.75);letter-spacing:.1em;text-transform:uppercase;}
 .h-actions{margin-left:auto;display:flex;gap:7px;align-items:center;}
 .hbtn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:var(--bdt);border-radius:10px;font-family:var(--fb);font-size:.78rem;font-weight:800;background:var(--yw);color:var(--bk);cursor:pointer;box-shadow:var(--sh);transition:all .12s;white-space:nowrap;}
@@ -55,7 +57,7 @@ main{
   flex:1;
   min-height:0;
   overflow:hidden;
-  /* children: map | drag1 | sidebar | drag2 | planner */
+  height:0;   /* force flex child to not exceed parent */
 }
 
 /* MAP */
@@ -106,16 +108,19 @@ main{
 .place-list{
   flex:1;
   min-height:0;
+  height:0;                  /* critical for iOS flex sizing */
   overflow-y:scroll;
-  padding:8px 7px 8px 7px;
+  padding:8px 16px 8px 7px; /* right padding = room for scrollbar */
   display:flex;flex-direction:column;gap:6px;
-  /* Always-visible scrollbar */
   scrollbar-width:thin;
-  scrollbar-color:var(--bk) rgba(0,0,0,.08);
+  scrollbar-color:#1a1a1a rgba(0,0,0,.1);
 }
-.place-list::-webkit-scrollbar{width:7px;}
-.place-list::-webkit-scrollbar-track{background:rgba(0,0,0,.07);border-radius:4px;}
-.place-list::-webkit-scrollbar-thumb{background:var(--bk);border-radius:4px;min-height:40px;}
+.place-list::-webkit-scrollbar{width:8px;}
+.place-list::-webkit-scrollbar-track{background:rgba(0,0,0,.08);border-radius:4px;margin:4px;}
+.place-list::-webkit-scrollbar-thumb{
+  background:#1a1a1a;border-radius:4px;min-height:44px;
+  border:2px solid transparent;background-clip:content-box;
+}
 
 /* PLACE CARD */
 .pcard{border:var(--bdt);border-radius:14px;overflow:hidden;box-shadow:var(--sh);cursor:pointer;transition:transform .15s,box-shadow .15s;}
@@ -392,8 +397,8 @@ main{
   .h-title{font-size:.95rem;}
   .h-sub{display:none;}
   .hbtn{padding:5px 9px;font-size:.72rem;}
-  .tabs-bar{padding:0 7px;}
-  .tab{padding:6px 10px;font-size:.76rem;}
+  .tabs-bar{padding:0 7px;flex-shrink:0;overflow-x:auto;white-space:nowrap;}
+  .tab{padding:6px 10px;font-size:.76rem;flex-shrink:0;}
 
   /* ── Main: vertical flex, fills all remaining height ── */
   main{
@@ -448,6 +453,7 @@ main{
     min-width:unset;
     flex:1;
     min-height:0;
+    height:0;               /* CRITICAL: force flex child sizing on iOS */
     border-left:none;
     border-top:none;
     overflow:hidden;
@@ -479,16 +485,22 @@ main{
   .place-list{
     flex:1;
     min-height:0;
+    height:0;                  /* iOS critical */
     overflow-y:scroll;
     -webkit-overflow-scrolling:touch;
     overscroll-behavior-y:contain;
-    padding:8px 10px 8px 7px;  /* extra right padding for scrollbar */
+    padding:8px 16px 60px 7px; /* right + bottom padding for scrollbar & indicator */
     scrollbar-width:thin;
-    scrollbar-color:rgba(0,0,0,.4) rgba(0,0,0,.08);
+    scrollbar-color:#1a1a1a rgba(0,0,0,.1);
   }
-  .place-list::-webkit-scrollbar{width:7px;}
-  .place-list::-webkit-scrollbar-track{background:rgba(0,0,0,.07);border-radius:4px;}
-  .place-list::-webkit-scrollbar-thumb{background:rgba(0,0,0,.4);border-radius:4px;min-height:36px;}
+  .place-list::-webkit-scrollbar{width:8px;}
+  .place-list::-webkit-scrollbar-track{
+    background:rgba(0,0,0,.08);border-radius:4px;margin:4px;
+  }
+  .place-list::-webkit-scrollbar-thumb{
+    background:#1a1a1a;border-radius:4px;min-height:44px;
+    border:2px solid transparent;background-clip:content-box;
+  }
 
   /* ── Planner: bottom sheet ── */
   #planner{
