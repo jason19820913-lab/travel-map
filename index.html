@@ -324,6 +324,22 @@ main{
   display:none; /* shown only on mobile via media query */
 }
 
+/* ══ SCROLL HINT ══ */
+#scrollHint{
+  display:none; /* desktop hidden */
+  text-align:center;
+  font-size:.65rem;
+  font-weight:800;
+  color:rgba(0,0,0,.3);
+  padding:4px 0 5px;
+  flex-shrink:0;
+  background:var(--wh);
+  border-top:1.5px solid rgba(0,0,0,.08);
+  letter-spacing:.05em;
+  animation:fadeHint 3s ease 1s forwards;
+}
+@keyframes fadeHint{0%{opacity:1;}100%{opacity:0;pointer-events:none;}}
+
 /* ══ TOAST ══ */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bk);color:#fff;padding:9px 20px;border-radius:30px;font-size:.8rem;font-weight:800;z-index:9999;transition:transform .3s;white-space:nowrap;box-shadow:var(--shl);}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -422,17 +438,34 @@ main{
   }
   #sheetHandle:active{background:var(--pk);}
   #sheetPill{width:44px;height:5px;background:rgba(0,0,0,.3);border-radius:3px;}
+  #scrollHint{display:block;}
 
   /* sb-head pinned at top, does NOT scroll */
   .sb-head{flex-shrink:0;overflow:visible;}
 
-  /* place-list is the ONLY scrolling element */
+  /* place-list: always-visible scrollbar on mobile */
   .place-list{
     flex:1;
     min-height:0;
-    overflow-y:auto;
+    overflow-y:scroll;              /* scroll, not auto — forces track visible */
     -webkit-overflow-scrolling:touch;
     overscroll-behavior:contain;
+    padding-right:4px;
+  }
+  /* Scrollbar always visible on webkit (iOS Chrome/Safari) */
+  .place-list::-webkit-scrollbar{
+    width:6px;
+    background:rgba(0,0,0,.06);
+    border-radius:3px;
+  }
+  .place-list::-webkit-scrollbar-thumb{
+    background:rgba(0,0,0,.35);
+    border-radius:3px;
+    min-height:40px;
+  }
+  .place-list::-webkit-scrollbar-track{
+    background:rgba(0,0,0,.06);
+    border-radius:3px;
   }
 
   /* ── Planner: bottom sheet ── */
@@ -499,6 +532,8 @@ main{
         <div class="city-row" id="cityRow"></div>
       </div>
       <div class="place-list" id="placeList"></div>
+      <!-- 手機版滾動提示 -->
+      <div id="scrollHint">↕ 上下滑動查看更多景點</div>
     </aside>
 
 
