@@ -353,10 +353,11 @@ main{
   .tabs-bar{padding:0 7px;}
   .tab{padding:6px 10px;font-size:.76rem;}
 
-  /* ── Main: vertical flex column, full height ── */
+  /* ── Main: vertical flex, fills all remaining height ── */
   main{
     flex-direction:column;
     overflow:hidden;
+    /* height = 100vh minus header minus tabs */
   }
 
   /* ── Map: fixed height, shrinks/grows via JS ── */
@@ -382,30 +383,31 @@ main{
     user-select:none;
   }
   #dh1::after{
-    content:'── 拖曳調整 ──';
-    font-size:.62rem;
+    content:'⬆ 上拉看地圖 · 下拉看景點 ⬇';
+    font-size:.58rem;
     font-weight:800;
-    color:rgba(0,0,0,.4);
-    letter-spacing:.1em;
+    color:rgba(0,0,0,.45);
+    letter-spacing:.05em;
   }
   #dh1.active{background:var(--pk);}
   #dh1.active::after{color:#fff;}
 
   #dh2{display:none!important;}
 
-  /* ── Sidebar: flex column, fills remaining height ── */
+  /* ── Sidebar: flex column, fills remaining space ── */
   #sidebar{
     width:100%;
     min-width:unset;
     flex:1;
-    min-height:0;          /* critical: allows flex child to shrink */
+    min-height:0;
     border-left:none;
     border-top:none;
-    overflow:hidden;       /* clip, inner list scrolls independently */
+    overflow:hidden;
     display:flex;
     flex-direction:column;
+    position:relative;
   }
-  /* Mobile sheet handle visible */
+  /* Sheet handle pill */
   #sheetHandle{
     display:flex;
     align-items:center;justify-content:center;
@@ -419,19 +421,18 @@ main{
     user-select:none;
   }
   #sheetHandle:active{background:var(--pk);}
-  #sheetPill{
-    width:44px;height:5px;
-    background:rgba(0,0,0,.3);
-    border-radius:3px;
-  }
+  #sheetPill{width:44px;height:5px;background:rgba(0,0,0,.3);border-radius:3px;}
 
-  /* sb-head pinned, place-list scrolls */
-  .sb-head{flex-shrink:0;}
+  /* sb-head pinned at top, does NOT scroll */
+  .sb-head{flex-shrink:0;overflow:visible;}
+
+  /* place-list is the ONLY scrolling element */
   .place-list{
     flex:1;
-    min-height:0;          /* critical: allow scroll within flex */
-    overflow-y:scroll;     /* always show scrollbar track on iOS */
+    min-height:0;
+    overflow-y:auto;
     -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
   }
 
   /* ── Planner: bottom sheet ── */
