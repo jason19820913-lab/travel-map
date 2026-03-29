@@ -232,46 +232,29 @@ main{
    sidebar fills the rest with scrollable list
    ══════════════════════════════════════ */
 @media(max-width:600px){
-  /* Compact header */
-  header{padding:7px 10px;gap:8px;}
-  .h-logo{width:38px;height:38px;font-size:18px;}
+  header{padding:7px 10px;gap:8px;overflow:hidden;}
+  .h-logo{width:38px;height:38px;font-size:18px;flex-shrink:0;}
   .h-title{font-size:.9rem;}
   .h-sub{display:none;}
   .hbtn{padding:5px 9px;font-size:.72rem;}
   .tabs-bar{padding:0 8px;}
-  .tab{padding:7px 10px;font-size:.78rem;}
+  .tab{padding:7px 10px;font-size:.78rem;flex-shrink:0;}
 
-  /* App: fill screen, no scroll */
-  #app{
-    height:100vh;
-    height:100dvh; /* dynamic viewport — accounts for browser chrome */
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
-  }
+  main{flex-direction:column;overflow:hidden;}
 
-  /* Main fills remaining height after header+tabs */
-  main{
-    flex:1;
-    min-height:0;
-    display:flex;
-    flex-direction:column;
-    overflow:hidden;
-  }
-
-  /* Map: fixed 42% of main */
   #mapWrap{
-    flex:0 0 42%;
+    flex:none;
+    height:42vh;
     min-height:120px;
     position:relative;
     overflow:hidden;
   }
 
-  /* Drag handle */
   #dh1{
     flex-shrink:0;
     width:100%;height:26px;
-    border-top:3px solid var(--bk);border-bottom:3px solid var(--bk);
+    border-top:3px solid var(--bk);
+    border-bottom:3px solid var(--bk);
     background:var(--yw);
     display:flex;align-items:center;justify-content:center;
     cursor:row-resize;touch-action:none;user-select:none;
@@ -279,60 +262,56 @@ main{
   }
   #dh1::after{
     content:"⬆ 拖曳調整 ⬇";
-    font-size:.6rem;font-weight:800;color:rgba(0,0,0,.4);
-    letter-spacing:.06em;white-space:nowrap;writing-mode:horizontal-tb;
+    font-size:.6rem;font-weight:800;
+    color:rgba(0,0,0,.45);white-space:nowrap;
   }
   #dh1.active{background:var(--pk);}
   #dh1.active::after{color:#fff;}
   #dh2{display:none!important;}
 
-  /* Sidebar: fills remaining space */
   #sidebar{
     flex:1;
     min-height:0;
     width:100%;
-    border-left:none;
-    border-top:none;
-    display:flex;
-    flex-direction:column;
+    border-left:none;border-top:none;
+    display:flex;flex-direction:column;
     overflow:hidden;
   }
-  .sb-head{
-    flex-shrink:0;
-    /* slightly smaller padding on mobile */
-    padding:10px 12px 8px;
-  }
 
-  /* ★ THE KEY: place-list must have explicit height to scroll ★ */
-  .place-list{
-    flex:1;
-    /* This forces the list to have a defined height inside the flex parent */
-    min-height:0;
-    overflow-y:scroll !important;
-    -webkit-overflow-scrolling:touch;
-    overscroll-behavior-y:contain;
-    padding:8px 7px 16px;
-    scrollbar-width:thin;
-    scrollbar-color:#555 rgba(0,0,0,.1);
-  }
-  .place-list::-webkit-scrollbar{width:5px;}
-  .place-list::-webkit-scrollbar-track{background:rgba(0,0,0,.07);}
-  .place-list::-webkit-scrollbar-thumb{background:#555;border-radius:3px;min-height:30px;}
+  .sb-head{flex-shrink:0;padding:10px 12px 8px;}
 
-  /* Sheet handle pill */
   #sheetHandle{
     flex-shrink:0;
     display:flex;align-items:center;justify-content:center;
     height:20px;
     background:var(--yw);
-    border-top:3px solid var(--bk);border-bottom:2px solid rgba(0,0,0,.15);
+    border-top:3px solid var(--bk);
+    border-bottom:2px solid rgba(0,0,0,.15);
     cursor:row-resize;touch-action:none;user-select:none;
   }
   #sheetHandle:active{background:var(--pk);}
   #sheetPill{width:40px;height:4px;background:rgba(0,0,0,.28);border-radius:2px;}
 
-  /* Locate button smaller on mobile */
-  #locateBtn{width:40px;height:40px;font-size:1.15em;bottom:20px;right:8px;}
+  /* iOS Safari scroll fix: height:1px forces browser to compute a real height */
+  .place-list{
+    flex:1;
+    height:1px;
+    min-height:0;
+    overflow-y:scroll;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-y:contain;
+    padding:6px 14px 24px 7px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .place-list::-webkit-scrollbar{width:7px;display:block;}
+  .place-list::-webkit-scrollbar-track{background:rgba(0,0,0,.08);border-radius:4px;}
+  .place-list::-webkit-scrollbar-thumb{background:#888;border-radius:4px;min-height:44px;}
+
+  .pcard{width:100%;flex-shrink:0;}
+
+  #locateBtn{width:40px;height:40px;font-size:1.1em;bottom:20px;right:10px;}
 }
 </style>
 </head>
