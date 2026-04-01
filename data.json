@@ -388,10 +388,25 @@
           "city": "北海道",
           "desc": "北海道札幌要找海鮮第一印象就是去二条市場\n大磯這間餐廳在當地已經有三間分店\n最近在2024年都有重新整修，主打就是各式各樣的海鮮丼\n甚至有推出當店限定菜單，一次吃三種螃蟹的蟹肉\n喜歡吃海鮮的來札幌別錯過囉！",
           "article": "https://jasonslife.tw/ohiso/",
-          "phone": "+81011-205-8989",
+          "phone": "+8111-205-8989",
           "duration": 60,
           "nav": "https://maps.google.com/?q=43.0583,141.35905",
           "id": "p_1775030339635"
+        },
+        {
+          "name": "Hamburg Steak North Continent(まちのなか店)",
+          "icon": "🥩",
+          "type": "restaurant",
+          "lat": 43.05818,
+          "lng": 141.35621,
+          "tips": "貍小路漢堡排餐廳",
+          "city": "北海道",
+          "desc": "北海道札幌漢堡排推薦，曾於2020年入圍日本tabelog洋食百名店\n使用北海道十勝牛肉拍打出紮實的漢堡排\n有超多種醬汁選擇，甚至有鹿肉可以嚐鮮\n餐廳就位在大樓的地下一樓，很不起眼\n但中午時間，卻是座無虛席\n如果有來貍小路一帶可以嚐嚐喔",
+          "article": "https://jasonslife.tw/northcontinent/",
+          "phone": "+81112188809",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=43.05818,141.35621",
+          "id": "p_1775030496216"
         }
       ]
     },
