@@ -281,6 +281,7 @@ textarea{resize:vertical;min-height:80px;}
           <option value="restaurant">🍽️ 餐廳</option>
           <option value="nature">🌿 自然</option>
           <option value="hotel">🏨 住宿</option>
+          <option value="shopping">🛍️ 購物</option>
         </select>
       </div>
       <div class="fg"><label>建議停留（分鐘）</label><input type="number" id="f_duration" value="60" min="10" step="10"></div>
@@ -406,7 +407,7 @@ function render() {
               <span class="pr-icon">${p.icon}</span>
               <div class="pr-info">
                 <div class="pr-name">${p.name}</div>
-                <span class="pr-type ${p.type}">${{sight:'景點',restaurant:'餐廳',nature:'自然',hotel:'住宿'}[p.type]}</span>
+                <span class="pr-type ${p.type}">${{sight:'景點',restaurant:'餐廳',nature:'自然',hotel:'住宿',shopping:'購物'}[p.type]}</span>
                 ${p.city?`<div style="font-size:.62rem;color:#1a6ea8;font-weight:800;margin-top:2px;">🏙 ${p.city}</div>`:''}
                 ${p.phone?`<div style="font-size:.62rem;color:#888;margin-top:1px;">📞 ${p.phone}</div>`:''}
               </div>
