@@ -6,7 +6,8 @@ const TYPE_CFG = {
   sight:      { label:'景點', color:'#4FC3F7', emoji:'🏛️' },
   restaurant: { label:'餐廳', color:'#FF9A3C', emoji:'🍽️' },
   nature:     { label:'自然', color:'#69D84F', emoji:'🌿' },
-  hotel:      { label:'住宿', color:'#B57BFF', emoji:'🏨' }
+  hotel:      { label:'住宿', color:'#B57BFF', emoji:'🏨' },
+  shopping:   { label:'購物', color:'#FF6B9D', emoji:'🛍️' }
 };
 
 function initMap() {
@@ -69,7 +70,8 @@ function addMarker(pl) {
 }
 
 function buildPopup(pl, cfg) {
-  const navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + pl.lat + ',' + pl.lng + '&travelmode=walking';
+  // Use getNavUrl if available (defined in index.html), fallback to Google Maps
+  var navUrl = (typeof getNavUrl === 'function') ? getNavUrl(pl, currentCountry) : 'https://www.google.com/maps/dir/?api=1&destination=' + pl.lat + ',' + pl.lng + '&travelmode=walking';
   const tel = pl.phone
     ? '<a class="pp-btn pp-btn-tel" href="tel:' + pl.phone + '">📞 電話</a>'
     : '';
@@ -83,7 +85,7 @@ function buildPopup(pl, cfg) {
     '</div>' +
     '<div class="pp-acts">' +
       '<button class="pp-btn" onclick="focusCard(\'' + pl.id + '\')">📋 詳情</button>' +
-      '<a class="pp-btn pp-btn-nav" href="' + navUrl + '" target="_blank">🧭 導航</a>' +
+      '<a class="pp-btn pp-btn-nav" href="' + navUrl + '" target="_blank">' + ((typeof currentCountry !== 'undefined' && currentCountry && currentCountry.id === 'korea') ? '🗺️ Naver' : '🧭 導航') + '</a>' +
       tel +
     '</div>' +
   '</div>';
