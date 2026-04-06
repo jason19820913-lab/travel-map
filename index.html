@@ -406,14 +406,50 @@ const TYPE = {
   shopping:   {label:'購物', color:'#FF6B9D', emoji:'🛍️'}
 };
 
-// 導航 URL：韓國用 Naver Map，其他用 Google Maps
+// 導航 URL：韓國用 Naver Map（帶地名），其他用 Google Maps
 function getNavUrl(pl, country) {
   var countryId = (country && country.id) ? country.id : (currentCountry ? currentCountry.id : '');
   if (countryId === 'korea') {
-    // Naver Map directions URL
-    return 'https://map.naver.com/p/directions/-/-/-/walk?c=' + pl.lng + ',' + pl.lat + ',15,0,0,0,dh&isCorrectAnswer=true';
+    var name = encodeURIComponent(pl.name || '');
+    var lat  = pl.lat, lng = pl.lng;
+    // Naver Map App URL Scheme（有安裝 App 優先開啟，直接導航到地名）
+    // Fallback: 網頁版搜尋地名
+    // 使用 intent URL 格式，Android 自動跳 App；iOS 用 nmap:// scheme
+    var webUrl = 'https://map.naver.com/p/search/' + name;
+    return webUrl;
   }
   return 'https://www.google.com/maps/dir/?api=1&destination=' + pl.lat + ',' + pl.lng + '&travelmode=walking';
+}
+
+// 韓國景點：點導航時開啟 Naver App（若有安裝）否則開網頁搜尋
+function openNaverNav(pl) {
+  var name = encodeURIComponent(pl.name || '');
+  var lat = pl.lat, lng = pl.lng;
+  // App URL Scheme：直接帶入目的地名稱 + 座標導航
+  var appUrl  = 'nmap://route/walk?dlat=' + lat + '&dlng=' + lng + '&dname=' + name + '&appname=travelmap';
+  // Web fallback：Naver Map 網頁搜尋地名
+  var webUrl  = 'https://map.naver.com/p/search/' + name;
+  // 嘗試開啟 App；若失敗（iOS/Android 未安裝）則跳網頁
+  var appOpened = false;
+  var timer = setTimeout(function() {
+    if (!appOpened) window.open(webUrl, '_blank');
+  }, 1500);
+  // 嘗試 App
+  try {
+    var iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = appUrl;
+    document.body.appendChild(iframe);
+    setTimeout(function() { document.body.removeChild(iframe); }, 2000);
+    // 若頁面失去焦點代表 App 成功開啟
+    window.addEventListener('blur', function onBlur() {
+      appOpened = true;
+      clearTimeout(timer);
+      window.removeEventListener('blur', onBlur);
+    });
+  } catch(e) {
+    window.open(webUrl, '_blank');
+  }
 }
 
 let currentCountry = null;
@@ -577,7 +613,10 @@ function renderCards(c) {
       '<div class="pcard-body" id="body-' + pl.id + '">' +
         '<p class="pdesc">' + pl.desc + '</p>' +
         '<div class="pbtns">' +
-          '<a class="abtn abtn-nav" href="' + navUrl + '" target="_blank">' + (currentCountry && currentCountry.id === 'korea' ? '🗺️ Naver 導航' : '🧭 Google 導航') + '</a>' +
+          (currentCountry && currentCountry.id === 'korea'
+            ? '<button class="abtn abtn-nav" onclick="openNaverNav({lat:' + pl.lat + ',lng:' + pl.lng + ',name:' + JSON.stringify(pl.name) + '})">🗺️ Naver 導航</button>'
+            : '<a class="abtn abtn-nav" href="' + navUrl + '" target="_blank">🧭 Google 導航</a>'
+          ) +
           telBtn + artBtn +
         '</div>' +
       '</div>';
