@@ -85,7 +85,10 @@ function buildPopup(pl, cfg) {
     '</div>' +
     '<div class="pp-acts">' +
       '<button class="pp-btn" onclick="focusCard(\'' + pl.id + '\')">📋 詳情</button>' +
-      '<a class="pp-btn pp-btn-nav" href="' + navUrl + '" target="_blank">' + ((typeof currentCountry !== 'undefined' && currentCountry && currentCountry.id === 'korea') ? '🗺️ Naver' : '🧭 導航') + '</a>' +
+      ((typeof currentCountry !== 'undefined' && currentCountry && currentCountry.id === 'korea')
+        ? '<button class="pp-btn pp-btn-nav" onclick="openNaverNav({lat:' + pl.lat + ',lng:' + pl.lng + ',name:' + JSON.stringify(pl.name) + '})">🗺️ Naver</button>'
+        : '<a class="pp-btn pp-btn-nav" href="' + navUrl + '" target="_blank">🧭 導航</a>'
+      ) +
       tel +
     '</div>' +
   '</div>';
