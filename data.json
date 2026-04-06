@@ -571,6 +571,21 @@
           "duration": 60,
           "nav": "https://maps.google.com/?q=33.4136,126.28279",
           "id": "p_1774879015964"
+        },
+        {
+          "name": "미쓰족발 서울명동점",
+          "icon": "🥩",
+          "type": "restaurant",
+          "lat": 37.56471,
+          "lng": 126.98337,
+          "tips": "開到凌晨3點，豬腳必點，推薦蒸蛋",
+          "city": "首爾",
+          "desc": "明洞推薦半夜宵夜好地方，逛完街都來得及吃",
+          "article": "https://jasonslife.tw/myth/",
+          "phone": "+82 2-3789-8799",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=37.56471,126.98337",
+          "id": "p_1775478999296"
         }
       ]
     }
