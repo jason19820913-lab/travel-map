@@ -586,6 +586,21 @@
           "duration": 60,
           "nav": "https://maps.google.com/?q=37.56471,126.98337",
           "id": "p_1775478999296"
+        },
+        {
+          "name": "태초갈비 명동점(太初排骨明洞店)",
+          "icon": "🥩",
+          "type": "restaurant",
+          "lat": 37.52689,
+          "lng": 126.98531,
+          "tips": "韓牛和排骨為經典招牌肉品",
+          "city": "首爾",
+          "desc": "主要提供韓牛及正宗韓式排骨，又有專人代烤\n好好的坐下來吃一頓飯，如果你在找明洞美食餐廳",
+          "article": "https://jasonslife.tw/myeongdong/",
+          "phone": "+82-507-1417-1598",
+          "duration": 90,
+          "nav": "https://maps.google.com/?q=37.52689,126.98531",
+          "id": "p_1775569809604"
         }
       ]
     }
