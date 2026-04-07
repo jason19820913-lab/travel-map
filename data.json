@@ -527,6 +527,21 @@
           "duration": 60,
           "nav": "https://maps.google.com/?q=35.22394,138.60889",
           "id": "p_1775571376693"
+        },
+        {
+          "name": "CLAD HOTEL",
+          "icon": "🏨",
+          "type": "hotel",
+          "lat": 35.3051,
+          "lng": 138.96681,
+          "tips": "房間內就可以直視富士山",
+          "city": "靜岡",
+          "desc": "靜岡縣住宿推薦，CLAD HOTEL就在御殿場outlet旁邊\n不但有提供免費停車以外，搭建空橋可以直達outlet\n最吸人眼球就是一進大廳，大片落地窗把富士山給框起來\n另外只要選房型為富士山那側，床頭就是富士山\n一早叫醒你的就是富士山的晨曦，超美",
+          "article": "https://jasonslife.tw/clad-hotel/",
+          "phone": "+81550810321",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=35.3051,138.96681",
+          "id": "p_1775580118261"
         }
       ]
     },
