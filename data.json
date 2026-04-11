@@ -542,6 +542,51 @@
           "duration": 60,
           "nav": "https://maps.google.com/?q=35.3051,138.96681",
           "id": "p_1775580118261"
+        },
+        {
+          "name": "Outdoor Cafe Meer Lounge",
+          "icon": "🥩",
+          "type": "restaurant",
+          "lat": 43.06547,
+          "lng": 141.3645,
+          "tips": "札幌紅磚啤酒工廠餐廳",
+          "city": "北海道",
+          "desc": "廢棄的啤酒製造工廠改造成商場及餐廳\n這裡要推薦一間異國料理餐廳，不但好吃又好拍\n使用北海道食材製作的豐富海鮮漁夫義大利麵\n北海道牛奶製作法式吐司，外脆內軟，超好吃推薦",
+          "article": "https://jasonslife.tw/post-226928780/",
+          "phone": "+81112001100",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=43.06547,141.3645",
+          "id": "p_1775884508518"
+        },
+        {
+          "name": "白金青池",
+          "icon": "🏞️",
+          "type": "sight",
+          "lat": 43.4936,
+          "lng": 142.61414,
+          "tips": "熱門景點藍色清澈的湖泊",
+          "city": "北海道",
+          "desc": "北海道最讓我期待的莫過於青池了\n因為防止十勝岳火山噴發的泥漿及噴發物的災害\n所築起好幾道防水提，積水後就成了現在眼前的青池",
+          "article": "https://jasonslife.tw/post-220819559/",
+          "phone": "+81166924321",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=43.4936,142.61414",
+          "id": "p_1775884689492"
+        },
+        {
+          "name": "Grand Park Otaru",
+          "icon": "🏨",
+          "type": "hotel",
+          "lat": 43.1836,
+          "lng": 141.02369,
+          "tips": "小樽住宿推薦",
+          "city": "北海道",
+          "desc": "小樽住宿推薦，早晨醒來就可望著窗戶外的海景\n停在碼頭內的快艇就好像模型般，住這飯店就是為了這景色\n房間內更不用說，不管是睡眠區或浴室空間都很大\n自助式早餐更是有無敵海景陪伴，讚啦~",
+          "article": "https://jasonslife.tw/post-220787649/",
+          "phone": "+81134213111",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=43.1836,141.02369",
+          "id": "p_1775884813666"
         }
       ]
     },
