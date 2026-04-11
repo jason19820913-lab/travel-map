@@ -721,6 +721,21 @@
           "duration": 60,
           "nav": "https://maps.google.com/?q=37.51197,127.09678",
           "id": "p_1775913060042"
+        },
+        {
+          "name": "조조칼국수 성수점(JoJo刀削麵聖水店)",
+          "icon": "🍜",
+          "type": "restaurant",
+          "lat": 37.54539,
+          "lng": 127.05675,
+          "tips": "蛤蜊刀削麵必點，可兩人點一份刀削麵一份海鮮蔥餅",
+          "city": "首爾",
+          "desc": "莫過於以「鮮甜蛤蜊湯頭」與「爆量海鮮煎餅」聞名的 조조칼국수 (Jojo Kalguksu)\n無論你是排入首爾自由行行程，還是尋找聖水洞周邊的午餐選擇",
+          "article": "https://jasonslife.tw/jojo-kalguksu/",
+          "phone": "+8224684333",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=37.54539,127.05675",
+          "id": "p_1775918270969"
         }
       ]
     }
