@@ -587,6 +587,21 @@
           "duration": 60,
           "nav": "https://maps.google.com/?q=43.1836,141.02369",
           "id": "p_1775884813666"
+        },
+        {
+          "name": "沖繩DFS免稅店",
+          "icon": "🛒",
+          "type": "shopping",
+          "lat": 26.224,
+          "lng": 127.69771,
+          "tips": "LV可免費燙風師爺LOGO",
+          "city": "沖繩",
+          "desc": "特地造訪 Louis Vuitton 專櫃\n成功入手一款極具紀念價值的 LV 燙金風獅爺LOGO的零錢包",
+          "article": "https://jasonslife.tw/okinawalv/",
+          "phone": "+81120782460",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=26.224,127.69771",
+          "id": "p_1775889515969"
         }
       ]
     },
