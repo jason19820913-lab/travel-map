@@ -706,6 +706,21 @@
           "duration": 90,
           "nav": "https://maps.google.com/?q=37.52689,126.98531",
           "id": "p_1775569809604"
+        },
+        {
+          "name": "감성교복 롯데월드점(感性校服 樂天世界店)",
+          "icon": "🌉",
+          "type": "sight",
+          "lat": 37.51197,
+          "lng": 127.09678,
+          "tips": "每人每套20000韓元",
+          "city": "首爾",
+          "desc": "穿上韓劇裡最常見的韓式校服，走進樂天世界打卡拍照\n是許多來首爾旅遊的女生夢想清單之一",
+          "article": "https://jasonslife.tw/gamsunggyobok-lotteworld/",
+          "phone": "+82221431104",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=37.51197,127.09678",
+          "id": "p_1775913060042"
         }
       ]
     }
