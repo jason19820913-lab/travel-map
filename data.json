@@ -736,6 +736,21 @@
           "duration": 60,
           "nav": "https://maps.google.com/?q=37.54539,127.05675",
           "id": "p_1775918270969"
+        },
+        {
+          "name": "소문난성수감자탕(祖傳三代馬鈴薯排骨店)",
+          "icon": "🍲",
+          "type": "restaurant",
+          "lat": 37.54297,
+          "lng": 127.05439,
+          "tips": "24小時營業的祖傳馬鈴薯排骨湯",
+          "city": "首爾",
+          "desc": "聖水洞推薦美食",
+          "article": "https://jasonslife.tw/somunnan-seongsu-gamjatang/",
+          "phone": "+8224656580",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=37.54297,127.05439",
+          "id": "p_1775976884410"
         }
       ]
     }
