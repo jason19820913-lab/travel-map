@@ -902,6 +902,21 @@
           "duration": 60,
           "nav": "https://maps.google.com/?q=26.1787,127.82939",
           "id": "p_1776237029678"
+        },
+        {
+          "name": "沖繩幸喜海灘最佳西方酒店",
+          "icon": "🏨",
+          "type": "hotel",
+          "lat": 26.53892,
+          "lng": 127.94847,
+          "tips": "名護海灘酒店推薦",
+          "city": "沖繩",
+          "desc": "後方就有自己的海灘，一樓還有超商\n大坪數CP值高的飯店",
+          "article": "https://jasonslife.tw/post-223664808/",
+          "phone": "+81980548155",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=26.53892,127.94847",
+          "id": "p_1776237251926"
         }
       ]
     },
