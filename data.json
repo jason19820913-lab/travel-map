@@ -752,6 +752,36 @@
           "duration": 60,
           "nav": "https://maps.google.com/?q=26.69707,126.01979",
           "id": "p_1776231638219"
+        },
+        {
+          "name": "花人逢Pizza in the sky",
+          "icon": "🍕",
+          "type": "restaurant",
+          "lat": 26.66863,
+          "lng": 127.90086,
+          "tips": "海景披薩餐廳",
+          "city": "沖繩",
+          "desc": "坐在餐廳內眺望瀨底島海域，好舒壓\n披薩只提供單一選擇，就是大量的起司香腸披薩\n再來一碗凍芒果甜點，超消暑啊",
+          "article": "https://jasonslife.tw/post-227452235/",
+          "phone": "+81980475537",
+          "duration": 90,
+          "nav": "https://maps.google.com/?q=26.66863,127.90086",
+          "id": "p_1776231767702"
+        },
+        {
+          "name": "Okinawa Marriott Resort & Spa",
+          "icon": "🏨",
+          "type": "hotel",
+          "lat": 26.53033,
+          "lng": 127.93397,
+          "tips": "海景游泳池飯店",
+          "city": "沖繩",
+          "desc": "萬豪集團海景飯店",
+          "article": "https://jasonslife.tw/post-227397155/",
+          "phone": "+81980511000",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=26.53033,127.93397",
+          "id": "p_1776231919581"
         }
       ]
     },
