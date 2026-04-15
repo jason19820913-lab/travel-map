@@ -917,6 +917,21 @@
           "duration": 60,
           "nav": "https://maps.google.com/?q=26.53892,127.94847",
           "id": "p_1776237251926"
+        },
+        {
+          "name": "Vongo & Anchor",
+          "icon": "☕",
+          "type": "restaurant",
+          "lat": 26.31551,
+          "lng": 127.75366,
+          "tips": "美國村海景早午餐",
+          "city": "沖繩",
+          "desc": "濃厚的工業風又有乾燥花的浪漫氛圍\n早午餐滿推薦夾著酪梨的海老三明治以及利用八種食材的拼盤",
+          "article": "https://jasonslife.tw/post-223291975/",
+          "phone": "+81989885757",
+          "duration": 90,
+          "nav": "https://maps.google.com/?q=26.31551,127.75366",
+          "id": "p_1776237732542"
         }
       ]
     },
