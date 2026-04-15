@@ -842,6 +842,36 @@
           "duration": 60,
           "nav": "https://maps.google.com/?q=26.23033,127.70356",
           "id": "p_1776233874049"
+        },
+        {
+          "name": "しまぶた屋 恩納本店",
+          "icon": "🥩",
+          "type": "restaurant",
+          "lat": 26.487,
+          "lng": 127.84616,
+          "tips": "北部用蒸的阿咕豬",
+          "city": "沖繩",
+          "desc": "這間以蒸籠烹煮Agu豬為名的餐廳\n是我到沖繩吃了會念念不忘了好味道\n每桌都有個蒸籠\n只要依序把豬肉丸、蔬菜、Agu豬肉片鋪上蒸籠\n蓋上蓋子，把沙漏翻轉等待沙子完全漏光後\n就可以享用白肉肉的Agu豬",
+          "article": "https://jasonslife.tw/post-224915831/",
+          "phone": "+81989661450",
+          "duration": 90,
+          "nav": "https://maps.google.com/?q=26.487,127.84616",
+          "id": "p_1776234621141"
+        },
+        {
+          "name": "Okinawa Kariyushi Beach Resort Ocean Spa",
+          "icon": "🏨",
+          "type": "hotel",
+          "lat": 26.52623,
+          "lng": 127.93004,
+          "tips": "恩納住宿海景推薦",
+          "city": "沖繩",
+          "desc": "沖繩恩納海景飯店推薦\n房間空間寬廣，陽台就有海景可欣賞\n戶外大型游泳池，就可欣賞海天一線海景\n拍照也是超美\n飯店內有兩座公共湯池\n重點是時機對了房價也會相對的CP值破表",
+          "article": "https://jasonslife.tw/post-225028043/",
+          "phone": "+81989678731",
+          "duration": 60,
+          "nav": "https://maps.google.com/?q=26.52623,127.93004",
+          "id": "p_1776236090730"
         }
       ]
     },
